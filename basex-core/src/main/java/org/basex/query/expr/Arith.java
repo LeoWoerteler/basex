@@ -31,7 +31,7 @@ public final class Arith extends Arr {
   public Arith(final InputInfo ii, final Expr e1, final Expr e2, final Calc c) {
     super(ii, e1, e2);
     calc = c;
-    type = SeqType.ITEM_ZO;
+    type = ExtSeqType.get(SeqType.ITEM_ZO);
   }
 
   @Override
@@ -42,15 +42,15 @@ public final class Arith extends Arr {
 
   @Override
   public Expr optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
-    final SeqType s0 = expr[0].type();
-    final SeqType s1 = expr[1].type();
+    final SeqType s0 = expr[0].seqType();
+    final SeqType s1 = expr[1].seqType();
     final Type t0 = s0.type;
     final Type t1 = s1.type;
     if(t0.isNumberOrUntyped() && t1.isNumberOrUntyped()) {
       final Occ occ = s0.one() && s1.one() ? Occ.ONE : Occ.ZERO_ONE;
-      type = SeqType.get(Calc.type(t0, t1), occ);
+      type = ExtSeqType.get(SeqType.get(Calc.type(t0, t1), occ));
     } else if(s0.one() && s1.one()) {
-      type = SeqType.ITEM;
+      type = ExtSeqType.get(SeqType.ITEM);
     }
     return optPre(oneIsEmpty() ? null : allAreValues() ? item(ctx, info) : this, ctx);
   }

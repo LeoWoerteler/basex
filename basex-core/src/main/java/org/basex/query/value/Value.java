@@ -88,6 +88,11 @@ public abstract class Value extends Expr implements Iterable<Item> {
   }
 
   @Override
+  public SeqType seqType() {
+    return SeqType.get(type, size());
+  }
+
+  @Override
   public abstract long size();
 
   /**

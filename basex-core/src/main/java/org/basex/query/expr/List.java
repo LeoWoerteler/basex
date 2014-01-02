@@ -8,7 +8,6 @@ import org.basex.query.value.*;
 import org.basex.query.value.item.*;
 import org.basex.query.value.seq.*;
 import org.basex.query.value.type.*;
-import org.basex.query.value.type.SeqType.Occ;
 import org.basex.query.var.*;
 import org.basex.util.*;
 import org.basex.util.hash.*;
@@ -22,6 +21,7 @@ import org.basex.util.hash.*;
 public final class List extends Arr {
   /** Limit for the size of sequences that are materialized at compile time. */
   private static final int MAX_MAT_SIZE = 1 << 20;
+
   /**
    * Constructor.
    * @param ii input info
@@ -46,21 +46,31 @@ public final class List extends Arr {
   @Override
   public Expr optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
     // compute number of results
-    size = 0;
-    boolean ne = false;
-    for(final Expr e : expr) {
-      final long c = e.size();
-      ne |= c > 0 || e.type().occ.min == 1;
-      if(c == -1) {
-        size = -1;
-        break;
-      } else if(size >= 0) {
-        size += c;
-      }
+    ExtSeqType extType = null;
+    int j = 0;
+    for(int i = 0; i < expr.length; i++) {
+      final Expr e = expr[i];
+      // size == 0 && !has(Flag.NDT) && !has(Flag.UPD)
+      if(e.isEmpty()) continue;
+      if(i != j) expr[j] = e;
+      final ExtSeqType est = e.type();
+      extType = extType == null ? est : extType.plus(est);
+      j++;
     }
 
+    // no concatenation needed, return contents
+    if(j < 2) return optPre(j == 0 ? null : expr[0], ctx);
+
+    if(j < expr.length) {
+      // remove empty sequences
+      final Expr[] copy = new Expr[j];
+      System.arraycopy(expr, 0, copy, 0, j);
+      expr = copy;
+    }
+
+    type = extType;
+    final long size = extType.size();
     if(size >= 0) {
-      if(size == 0 && !has(Flag.NDT) && !has(Flag.UPD)) return optPre(null, ctx);
       if(allAreValues() && size <= MAX_MAT_SIZE) {
         Type all = null;
         final Value[] vs = new Value[expr.length];
@@ -89,18 +99,6 @@ public final class List extends Arr {
         }
         return optPre(val, ctx);
       }
-    }
-
-    if(size == 0) {
-      type = SeqType.EMP;
-    } else {
-      final Occ o = size == 1 ? Occ.ONE : size < 0 && !ne ? Occ.ZERO_MORE : Occ.ONE_MORE;
-      SeqType t = null;
-      for(final Expr e : expr) {
-        final SeqType st = e.type();
-        if(!e.isEmpty() && st.occ != Occ.ZERO) t = t == null ? st : t.union(st);
-      }
-      type = SeqType.get(t == null ? AtomType.ITEM : t.type, o);
     }
 
     return this;

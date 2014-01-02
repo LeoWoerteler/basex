@@ -275,11 +275,16 @@ public abstract class Expr extends ExprInfo {
   }
 
   /**
-   * Returns the static type of the evaluated value. For simplicity, some types have been
-   * merged to super types. As an example, many numeric types are treated as integers.
-   * @return result of check
+   * Returns the static type of the evaluated value.
+   * @return extended sequence type
    */
-  public abstract SeqType type();
+  public abstract ExtSeqType type();
+
+  /**
+   * Returns this expression's static sequence type.
+   * @return sequence type
+   */
+  public abstract SeqType seqType();
 
   /**
    * Indicates if the items returned by this expression are iterable, i.e., if returned

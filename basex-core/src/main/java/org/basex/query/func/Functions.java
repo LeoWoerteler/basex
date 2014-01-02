@@ -136,7 +136,7 @@ public final class Functions extends TokenSet {
       final VarScope scp = new VarScope(sc);
       final Var[] args = { scp.newLocal(ctx, new QNm(QueryText.ITEMM, ""), SeqType.AAT_ZO, true) };
       final Expr e = new Cast(sc, ii, new VarRef(ii, args[0]), type.seqType());
-      final FuncType tp = FuncType.get(e.type(), SeqType.AAT_ZO);
+      final FuncType tp = FuncType.get(e.seqType(), SeqType.AAT_ZO);
       return new FuncItem(sc, new Ann(), name, args, tp, e, false, scp.stackSize());
     }
 

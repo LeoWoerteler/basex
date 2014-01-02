@@ -190,7 +190,8 @@ public abstract class Path extends ParseExpr {
     // set atomic type for single attribute steps to speedup predicate tests
     if(root == null && st.length == 1 && st[0] instanceof Step) {
       final Step curr = (Step) st[0];
-      if(curr.axis == ATTR && curr.test.mode == Mode.STD) curr.type = SeqType.NOD_ZO;
+      if(curr.axis == ATTR && curr.test.mode == Mode.STD)
+        curr.type = ExtSeqType.get(SeqType.NOD_ZO);
     }
     steps = st;
   }

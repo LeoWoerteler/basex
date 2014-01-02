@@ -115,6 +115,14 @@ public final class FuncItem extends FItem implements Scope {
   }
 
   @Override
+  public ExtSeqType returnType() {
+    if(cast == null) return expr.type();
+    final ExtSeqType extCast = ExtSeqType.get(cast);
+    final ExtSeqType res = expr.type().intersect(extCast);
+    return res != null ? res : extCast;
+  }
+
+  @Override
   public Value invValue(final QueryContext ctx, final InputInfo ii, final Value... args)
       throws QueryException {
 

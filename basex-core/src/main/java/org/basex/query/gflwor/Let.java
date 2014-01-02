@@ -110,7 +110,7 @@ public final class Let extends GFLWOR.Clause {
 
   @Override
   public Let compile(final QueryContext ctx, final VarScope scp) throws QueryException {
-    var.refineType(score ? SeqType.DBL : expr.type(), ctx, info);
+    var.refineType(score ? ExtSeqType.get(SeqType.DBL) : expr.type(), ctx, info);
     expr = expr.compile(ctx, scp);
     return optimize(ctx, scp);
   }
@@ -119,19 +119,18 @@ public final class Let extends GFLWOR.Clause {
   public Let optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
     if(!score && expr instanceof TypeCheck) {
       final TypeCheck tc = (TypeCheck) expr;
-      if(tc.isRedundant(var) || var.adoptCheck(tc.type, tc.promote)) {
+      if(tc.isRedundant(var) || var.adoptCheck(tc.check, tc.promote)) {
         ctx.compInfo(OPTCAST, tc.type);
         expr = tc.expr;
       }
     }
 
-    type = score ? SeqType.DBL : expr.type();
+    type = score ? ExtSeqType.get(SeqType.DBL) : expr.type();
     var.refineType(type, ctx, info);
-    if(var.checksType() && expr.isValue()) {
+    if(!score && var.checksType() && expr.isValue()) {
       expr = var.checkType((Value) expr, ctx, info);
       var.refineType(expr.type(), ctx, info);
     }
-    size = score ? 1 : expr.size();
     return this;
   }
 
@@ -184,8 +183,8 @@ public final class Let extends GFLWOR.Clause {
   }
 
   @Override
-  long calcSize(final long cnt) {
-    return cnt;
+  void calcSize(final long[] cnt) {
+    // tuple count does not change
   }
 
   /**

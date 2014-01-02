@@ -27,7 +27,7 @@ final class XdmSequence extends XdmValue {
 
   @Override
   public SeqType getType() {
-    return sequence.type();
+    return sequence.seqType();
   }
 
   @Override

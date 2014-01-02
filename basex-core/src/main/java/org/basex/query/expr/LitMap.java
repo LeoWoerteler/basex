@@ -22,7 +22,7 @@ public final class LitMap extends Arr {
    */
   public LitMap(final InputInfo ii, final Expr[] e) {
     super(ii, e);
-    type = SeqType.MAP_O;
+    type = ExtSeqType.get(SeqType.MAP_O);
   }
 
   @Override

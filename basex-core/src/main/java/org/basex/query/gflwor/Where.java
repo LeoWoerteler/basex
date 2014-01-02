@@ -111,8 +111,13 @@ public final class Where extends GFLWOR.Clause {
   }
 
   @Override
-  long calcSize(final long cnt) {
-    return pred == Bln.FALSE ? 0 : -1;
+  void calcSize(final long[] cnt) {
+    if(pred == Bln.FALSE) {
+      cnt[0] = 0;
+      cnt[1] = 0;
+    } else if(pred != Bln.TRUE) {
+      cnt[0] = 0;
+    }
   }
 
   @Override

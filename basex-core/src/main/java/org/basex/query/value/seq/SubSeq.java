@@ -86,7 +86,7 @@ public final class SubSeq extends Seq {
   }
 
   @Override
-  public SeqType type() {
-    return sub.type();
+  public ExtSeqType type() {
+    return sub.type().withSize(size);
   }
 }

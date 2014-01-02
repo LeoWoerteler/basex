@@ -28,7 +28,7 @@ public abstract class FTExpr extends ParseExpr {
   FTExpr(final InputInfo ii, final FTExpr... e) {
     super(ii);
     expr = e;
-    type = SeqType.BLN;
+    type = ExtSeqType.get(SeqType.BLN);
   }
 
   @Override

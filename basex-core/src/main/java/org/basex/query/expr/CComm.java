@@ -25,8 +25,7 @@ public final class CComm extends CFrag {
    * @param c comment
    */
   public CComm(final StaticContext sctx, final InputInfo ii, final Expr c) {
-    super(sctx, ii, c);
-    type = SeqType.COM;
+    super(NodeType.COM.seqType(), sctx, ii, c);
   }
 
   @Override

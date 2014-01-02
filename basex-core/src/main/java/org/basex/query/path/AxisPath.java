@@ -43,9 +43,9 @@ public abstract class AxisPath extends Path {
    */
   final AxisPath finish(final QueryContext ctx) {
     // evaluate number of results
-    size = size(ctx);
-    type = SeqType.get(steps[steps.length - 1].type().type, size);
-    return useIterator() ? new IterPath(info, root, steps, type, size) : this;
+    final long size = size(ctx);
+    type = steps[steps.length - 1].type().withSize(size);
+    return useIterator() ? new IterPath(info, root, steps, type) : this;
   }
 
   /**

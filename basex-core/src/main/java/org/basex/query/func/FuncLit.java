@@ -51,7 +51,7 @@ public final class FuncLit extends Single implements Scope {
     name = nm;
     args = arg;
     check = ft == null;
-    type = (ft == null ? FuncType.arity(args.length) : ft).seqType();
+    type = ExtSeqType.get((ft == null ? FuncType.arity(args.length) : ft).seqType());
     scope = scp;
     sc = sctx;
   }
@@ -65,7 +65,7 @@ public final class FuncLit extends Single implements Scope {
       final StaticFunc sf = ctx.funcs.get(name, args.length, info);
       if(sf == null) throw FUNCUNKNOWN.get(info, name.string());
       ann = sf.ann;
-      type = sf.funcType().seqType();
+      type = ExtSeqType.get(sf.funcType().seqType());
     }
 
     final int fp = scope.enter(ctx);
@@ -86,8 +86,9 @@ public final class FuncLit extends Single implements Scope {
 
   @Override
   public Item item(final QueryContext ctx, final InputInfo ii) {
-    return new FuncItem(sc, ann == null ? new Ann() : ann, name, args, (FuncType) type.type,
-        expr, false, ctx.value, ctx.pos, ctx.size, scope.stackSize());
+    return new FuncItem(sc, ann == null ? new Ann() : ann, name, args,
+        (FuncType) type.seqType().type, expr, false, ctx.value, ctx.pos, ctx.size,
+        scope.stackSize());
   }
 
   @Override
@@ -99,7 +100,7 @@ public final class FuncLit extends Single implements Scope {
     for(int i = 0; i < arg.length; i++)
       vs.put(args[i].id, arg[i] = scp.newCopyOf(ctx, args[i]));
     final Expr call = expr.copy(ctx, scp, vs);
-    return new FuncLit(a, name, arg, call, (FuncType) type.type, scp, sc, info);
+    return new FuncLit(a, name, arg, call, (FuncType) type.seqType().type, scp, sc, info);
   }
 
   @Override

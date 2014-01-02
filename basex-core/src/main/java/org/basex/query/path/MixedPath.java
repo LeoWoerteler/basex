@@ -50,8 +50,7 @@ public final class MixedPath extends Path {
       if(e != this) return e.compile(ctx, scp);
     }
 
-    size = size(ctx);
-    type = SeqType.get(steps[steps.length - 1].type().type, size);
+    type = steps[steps.length - 1].type().withSize(size(ctx));
     return this;
   }
 

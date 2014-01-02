@@ -82,7 +82,6 @@ public final class StaticFuncCall extends FuncCall {
     for(int i = 0; i < arg.length; i++) arg[i] = expr[i].copy(ctx, scp, vs);
     final StaticFuncCall call = new StaticFuncCall(name, arg, sc, func, false, info);
     call.type = type;
-    call.size = size;
     return call;
   }
 

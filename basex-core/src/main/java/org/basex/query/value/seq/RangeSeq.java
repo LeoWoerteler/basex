@@ -60,8 +60,8 @@ public final class RangeSeq extends Seq {
   }
 
   @Override
-  public SeqType type() {
-    return SeqType.ITR_OM;
+  public ExtSeqType type() {
+    return ExtSeqType.get(SeqType.ITR_OM, size, size);
   }
 
   @Override

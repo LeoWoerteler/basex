@@ -6,7 +6,6 @@ import org.basex.query.util.*;
 import org.basex.query.value.*;
 import org.basex.query.value.node.*;
 import org.basex.query.value.type.*;
-import org.basex.query.value.type.SeqType.Occ;
 import org.basex.query.var.*;
 import org.basex.util.*;
 
@@ -79,29 +78,42 @@ public abstract class Filter extends Preds {
    * @return compiled expression
    */
   private Expr opt(final QueryContext ctx) {
-    // evaluate return type
-    final SeqType t = root.type();
-
     // determine number of results and type
-    final long s = root.size();
-    if(s == -1) {
-      type = SeqType.get(t.type, t.zeroOrOne() ? Occ.ZERO_ONE : Occ.ZERO_MORE);
-    } else {
-      if(pos != null) {
-        size = Math.max(0, s + 1 - pos.min) - Math.max(0, s - pos.max);
-      } else if(last) {
-        size = s > 0 ? 1 : 0;
+    final ExtSeqType t = root.type();
+    if(t.size() == 0) return optPre(root, ctx);
+
+    if(last) {
+      // at most one result
+      type = t.withSize(preds.length > 1 ? 0 : Math.min(t.minSize(), 1), 1);
+    } else if(pos != null) {
+      final long max;
+      if(t.isBounded()) {
+        final long maxSize = t.maxSize();
+        if(pos.max == Long.MAX_VALUE) max = Math.max(maxSize - pos.min + 1, 0);
+        else max = Math.max(maxSize - pos.min + 1, 0) - Math.max(maxSize - pos.max, 0);
+      } else {
+        if(pos.max == Long.MAX_VALUE) max = -1;
+        else max = Math.max(pos.max - pos.min + 1, 0);
       }
-      // no results will remain: return empty sequence
-      if (size == 0) return optPre(null, ctx);
-      type = SeqType.get(t.type, size);
+
+      if(preds.length == 1) {
+        final long min;
+        final long minSize = t.minSize();
+        if(pos.max == Long.MAX_VALUE) min = Math.max(minSize - pos.min + 1, 0);
+        else min = Math.max(Math.min(pos.max, minSize) - pos.min + 1, 0);
+        type = t.withSize(min, max);
+      } else {
+        type = t.withSize(0, max);
+      }
+    } else {
+      type = t.withMinSize(0);
     }
 
     // no numeric predicates.. use simple iterator
     if(!super.has(Flag.FCS)) return new IterFilter(this);
 
     // one single position() or last() function specified: return single value
-    if(preds.length == 1 && (last || pos != null) && root.isValue() && t.one() &&
+    if(preds.length == 1 && (last || pos != null) && root.isValue() && t.size() == 1 &&
         (last || pos.min == 1 && pos.max == 1)) return optPre(root, ctx);
 
     // only choose deterministic and context-independent offsets; e.g., skip:
@@ -109,9 +121,9 @@ public abstract class Filter extends Preds {
     boolean off = false;
     if(preds.length == 1) {
       final Expr p = preds[0];
-      final SeqType st = p.type();
+      final SeqType st = p.type().seqType();
       off = st.type.isNumber() && st.zeroOrOne() && !p.has(Flag.CTX) && !p.has(Flag.NDT);
-      if(off) type = SeqType.get(type.type, Occ.ZERO_ONE);
+      if(off) type = type.withSize(0, 1);
     }
 
     // iterator for simple numeric predicate
@@ -161,9 +173,7 @@ public abstract class Filter extends Preds {
   public VarUsage count(final Var v) {
     final VarUsage inPreds = super.count(v), inRoot = root.count(v);
     if(inPreds == VarUsage.NEVER) return inRoot;
-    final long sz = root.size();
-    return sz >= 0 && sz <= 1 || root.type().zeroOrOne()
-        ? inRoot.plus(inPreds) : VarUsage.MORE_THAN_ONCE;
+    return root.type().zeroOrOne() ? inRoot.plus(inPreds) : VarUsage.MORE_THAN_ONCE;
   }
 
   @Override

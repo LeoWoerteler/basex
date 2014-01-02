@@ -23,6 +23,8 @@ public final class TypeCheck extends Single {
   public final boolean promote;
   /** Static context. */
   private final StaticContext sc;
+  /** Type to check. */
+  public final SeqType check;
 
   /**
    * Constructor.
@@ -36,7 +38,8 @@ public final class TypeCheck extends Single {
       final SeqType to, final boolean f) {
     super(ii, e);
     sc = sctx;
-    type = to;
+    check = to;
+    type = ExtSeqType.get(to);
     promote = f;
   }
 
@@ -48,23 +51,23 @@ public final class TypeCheck extends Single {
 
   @Override
   public Expr optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
-    final SeqType argType = expr.type();
-    if(argType.instanceOf(type)) {
+    final SeqType argType = expr.seqType();
+    if(argType.instanceOf(check)) {
       ctx.compInfo(QueryText.OPTCAST, type);
       return expr;
     }
 
     if(expr.isValue()) {
-      if(expr instanceof FuncItem && type.type instanceof FuncType) {
-        if(!type.occ.check(1)) throw Err.treatError(info, type, expr);
+      if(expr instanceof FuncItem && check.type instanceof FuncType) {
+        if(!check.occ.check(1)) throw Err.treatError(info, check, expr);
         final FuncItem fit = (FuncItem) expr;
-        return optPre(fit.coerceTo((FuncType) type.type, ctx, info, true), ctx);
+        return optPre(fit.coerceTo((FuncType) check.type, ctx, info, true), ctx);
       }
       return optPre(value(ctx), ctx);
     }
 
-    if(argType.type.instanceOf(type.type)) {
-      final SeqType.Occ occ = argType.occ.intersect(type.occ);
+    if(argType.type.instanceOf(check.type)) {
+      final SeqType.Occ occ = argType.occ.intersect(check.occ);
       if(occ == null) throw INVCAST.get(info, argType, type);
     }
 
@@ -82,14 +85,14 @@ public final class TypeCheck extends Single {
   @Override
   public Value value(final QueryContext ctx) throws QueryException {
     final Value val = expr.value(ctx);
-    if(type.instance(val)) return val;
-    if(promote) return type.funcConvert(ctx, sc, info, val, false);
-    throw INVCAST.get(info, val.type(), type);
+    if(check.instance(val)) return val;
+    if(promote) return check.funcConvert(ctx, sc, info, val, false);
+    throw INVCAST.get(info, val.type(), check);
   }
 
   @Override
   public Expr copy(final QueryContext ctx, final VarScope scp, final IntObjMap<Var> vs) {
-    return new TypeCheck(sc, info, expr.copy(ctx, scp, vs), type, promote);
+    return new TypeCheck(sc, info, expr.copy(ctx, scp, vs), check, promote);
   }
 
   @Override
@@ -101,7 +104,7 @@ public final class TypeCheck extends Single {
 
   @Override
   public String toString() {
-    return "((: " + type + ", " + promote + " :) " + expr.toString() + ')';
+    return "((: " + check + ", " + promote + " :) " + expr.toString() + ')';
   }
 
   /**
@@ -110,7 +113,7 @@ public final class TypeCheck extends Single {
    * @return result of check
    */
   public boolean isRedundant(final Var var) {
-    return (!promote || var.promotes()) && var.declaredType().instanceOf(type);
+    return (!promote || var.promotes()) && var.declaredType().instanceOf(check);
   }
 
   /**
@@ -123,6 +126,6 @@ public final class TypeCheck extends Single {
    */
   public Expr check(final Expr e, final QueryContext ctx, final VarScope scp)
       throws QueryException {
-    return new TypeCheck(sc, info, e, type, promote).optimize(ctx, scp);
+    return new TypeCheck(sc, info, e, check, promote).optimize(ctx, scp);
   }
 }

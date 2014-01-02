@@ -50,7 +50,9 @@ public final class Count extends Clause {
   @Override
   boolean skippable(final Clause cl) {
     // the clause should not change tuple counts
-    return super.skippable(cl) && cl.calcSize(1) == 1;
+    final long[] minMax = { 1, 1 };
+    cl.calcSize(minMax);
+    return super.skippable(cl) && minMax[0] == 1 && minMax[1] == 1;
   }
 
   @Override
@@ -72,7 +74,7 @@ public final class Count extends Clause {
 
   @Override
   public Count compile(final QueryContext ctx, final VarScope scp) throws QueryException {
-    count.refineType(SeqType.ITR, ctx, info);
+    count.refineType(ExtSeqType.get(SeqType.ITR), ctx, info);
     return this;
   }
 
@@ -115,8 +117,8 @@ public final class Count extends Clause {
   }
 
   @Override
-  long calcSize(final long cnt) {
-    return cnt;
+  void calcSize(final long[] cnt) {
+    // tuple count does not change
   }
 
   @Override

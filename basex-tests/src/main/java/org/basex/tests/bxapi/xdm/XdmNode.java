@@ -47,7 +47,7 @@ final class XdmNode extends XdmItem {
 
   @Override
   public SeqType getType() {
-    return node.type();
+    return node.seqType();
   }
 
   @Override

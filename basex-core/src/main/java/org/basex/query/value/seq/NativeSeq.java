@@ -42,7 +42,7 @@ public abstract class NativeSeq extends Seq {
   }
 
   @Override
-  public final SeqType type() {
-    return SeqType.get(type, Occ.ONE_MORE);
+  public final ExtSeqType type() {
+    return ExtSeqType.get(SeqType.get(type, Occ.ONE_MORE), size, size);
   }
 }

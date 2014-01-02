@@ -7,7 +7,6 @@ import org.basex.query.iter.*;
 import org.basex.query.value.*;
 import org.basex.query.value.node.*;
 import org.basex.query.value.type.*;
-import org.basex.query.value.type.SeqType.Occ;
 import org.basex.query.var.*;
 import org.basex.util.*;
 import org.basex.util.hash.*;
@@ -22,6 +21,9 @@ public final class Cast extends Single {
   /** Static context. */
   private final StaticContext sc;
 
+  /** Type to cast to. */
+  private final SeqType cast;
+
   /**
    * Function constructor.
    * @param sx static context
@@ -32,7 +34,8 @@ public final class Cast extends Single {
   public Cast(final StaticContext sx, final InputInfo ii, final Expr e, final SeqType t) {
     super(ii, e);
     sc = sx;
-    type = t;
+    cast = t;
+    type = ExtSeqType.get(t);
   }
 
   @Override
@@ -43,21 +46,20 @@ public final class Cast extends Single {
 
   @Override
   public Expr optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
-    if(expr.type().one()) type = SeqType.get(type.type, Occ.ONE);
+    final ExtSeqType argType = expr.type();
+    if(argType.size() == 1) type = type.withSize(1);
 
     // pre-evaluate value
     if(expr.isValue()) return optPre(value(ctx), ctx);
 
     // skip cast if specified and return types are equal
     // (the following types will always be correct)
-    final Type t = type.type;
+    final Type t = cast.type;
     if((t == AtomType.BLN || t == AtomType.FLT || t == AtomType.DBL ||
-        t == AtomType.QNM || t == AtomType.URI) && type.eq(expr.type())) {
+        t == AtomType.QNM || t == AtomType.URI) && cast.eq(argType.seqType())) {
       optPre(expr, ctx);
       return expr;
     }
-
-    size = type.occ();
 
     return this;
   }
@@ -69,21 +71,21 @@ public final class Cast extends Single {
 
   @Override
   public Value value(final QueryContext ctx) throws QueryException {
-    return type.cast(expr.item(ctx, info), ctx, sc, info, this);
+    return cast.cast(expr.item(ctx, info), ctx, sc, info, this);
   }
 
   @Override
   public Cast copy(final QueryContext ctx, final VarScope scp, final IntObjMap<Var> vs) {
-    return new Cast(sc, info, expr.copy(ctx, scp, vs), type);
+    return new Cast(sc, info, expr.copy(ctx, scp, vs), cast);
   }
 
   @Override
   public void plan(final FElem plan) {
-    addPlan(plan, planElem(TYP, type), expr);
+    addPlan(plan, planElem(TYP, cast), expr);
   }
 
   @Override
   public String toString() {
-    return expr + " " + CAST + ' ' + AS + ' ' + type;
+    return expr + " " + CAST + ' ' + AS + ' ' + cast;
   }
 }

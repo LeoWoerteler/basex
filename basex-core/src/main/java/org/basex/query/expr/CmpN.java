@@ -84,7 +84,7 @@ public final class CmpN extends Cmp {
   public CmpN(final Expr e1, final Expr e2, final OpN o, final InputInfo ii) {
     super(ii, e1, e2, null);
     op = o;
-    type = SeqType.BLN_ZO;
+    type = ExtSeqType.get(SeqType.BLN_ZO);
   }
 
   @Override
@@ -95,8 +95,8 @@ public final class CmpN extends Cmp {
 
   @Override
   public Expr optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
-    type = SeqType.get(AtomType.BLN, expr[0].size() == 1 && expr[1].size() == 1 ?
-        Occ.ONE : Occ.ZERO_ONE);
+    type = ExtSeqType.get(SeqType.get(AtomType.BLN, expr[0].size() == 1 && expr[1].size() == 1 ?
+        Occ.ONE : Occ.ZERO_ONE));
 
     return optPre(oneIsEmpty() ? null : allAreValues() ? item(ctx, info) : this, ctx);
   }

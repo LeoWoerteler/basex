@@ -176,7 +176,7 @@ public final class FNInfo extends StandardFunc {
    * @param tp type of the expression
    * @return function
    */
-  public static FNInfo error(final QueryException ex, final SeqType tp) {
+  public static FNInfo error(final QueryException ex, final ExtSeqType tp) {
     final FNInfo err = new FNInfo(null, ex.info(), ERROR, ex.qname(),
         Str.get(ex.getLocalizedMessage()));
     err.type = tp;

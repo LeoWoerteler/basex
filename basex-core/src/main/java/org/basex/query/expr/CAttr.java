@@ -34,9 +34,8 @@ public final class CAttr extends CName {
    */
   public CAttr(final StaticContext sctx, final InputInfo ii, final boolean c,
       final Expr n, final Expr... v) {
-    super(ATTRIBUTE, sctx, ii, n, v);
+    super(ATTRIBUTE, SeqType.ATT, sctx, ii, n, v);
     comp = c;
-    type = SeqType.ATT;
   }
 
   @Override

@@ -80,8 +80,9 @@ public final class FNGen extends StandardFunc {
   @Override
   protected Expr opt(final QueryContext ctx, final VarScope scp) {
     if(sig == DATA && expr.length == 1) {
-      final SeqType t = expr[0].type();
-      type = t.type.isNode() ? SeqType.get(AtomType.ATM, t.occ) : t;
+      final ExtSeqType t = expr[0].type();
+      type = t.seqType().type.isNode() ? ExtSeqType.get(AtomType.ATM.seqType(),
+          t.minSize(), t.isBounded() ? t.maxSize() : -1) : t;
     }
     return this;
   }

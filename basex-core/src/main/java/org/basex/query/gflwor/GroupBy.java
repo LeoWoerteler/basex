@@ -14,7 +14,6 @@ import org.basex.query.value.item.*;
 import org.basex.query.value.node.*;
 import org.basex.query.value.seq.*;
 import org.basex.query.value.type.*;
-import org.basex.query.value.type.SeqType.Occ;
 import org.basex.query.var.*;
 import org.basex.util.*;
 import org.basex.util.hash.*;
@@ -224,9 +223,8 @@ public final class GroupBy extends GFLWOR.Clause {
   @Override
   public GroupBy optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
     for(int i = 0; i < preExpr.length; i++) {
-      final SeqType it = preExpr[i].type();
-      post[i].refineType(it.withOcc(it.mayBeZero() ? Occ.ZERO_MORE : Occ.ONE_MORE),
-          ctx, info);
+      final ExtSeqType it = preExpr[i].type();
+      post[i].refineType(it.withSize(it.minSize(), -1), ctx, info);
     }
     return this;
   }
@@ -301,8 +299,10 @@ public final class GroupBy extends GFLWOR.Clause {
   }
 
   @Override
-  long calcSize(final long cnt) {
-    return -1;
+  void calcSize(final long[] cnt) {
+    // there can be at most one output tuple per input tuple
+    // and the output is only empty when the input is
+    cnt[0] = cnt[0] == 0 ? 0 : 1;
   }
 
   @Override

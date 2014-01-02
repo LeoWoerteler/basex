@@ -29,7 +29,7 @@ public final class Instance extends Single {
   public Instance(final InputInfo ii, final Expr e, final SeqType s) {
     super(ii, e);
     seq = s;
-    type = SeqType.BLN;
+    type = ExtSeqType.get(SeqType.BLN);
   }
 
   @Override

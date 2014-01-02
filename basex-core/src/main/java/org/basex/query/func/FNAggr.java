@@ -73,9 +73,9 @@ public final class FNAggr extends StandardFunc {
         break;
       case SUM:
         if(c == 0) return expr.length == 2 ? expr[1] : Int.get(0);
-        final Type a = e.type().type, b = expr.length == 2 ? expr[1].type().type : a;
+        final Type a = e.seqType().type, b = expr.length == 2 ? expr[1].seqType().type : a;
         if(a.isNumberOrUntyped() && b.isNumberOrUntyped()) {
-          type = Calc.type(a, b).seqType();
+          type = ExtSeqType.get(Calc.type(a, b).seqType());
         }
         break;
       default:

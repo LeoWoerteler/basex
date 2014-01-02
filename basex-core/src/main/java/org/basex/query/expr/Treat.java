@@ -22,6 +22,9 @@ import org.basex.util.hash.*;
  * @author Christian Gruen
  */
 public final class Treat extends Single {
+  /** Sequence type to check. */
+  public final SeqType as;
+
   /**
    * Constructor.
    * @param ii input info
@@ -30,7 +33,8 @@ public final class Treat extends Single {
    */
   public Treat(final InputInfo ii, final Expr e, final SeqType s) {
     super(ii, e);
-    type = s;
+    as = s;
+    type = ExtSeqType.get(s);
   }
 
   @Override
@@ -50,15 +54,15 @@ public final class Treat extends Single {
     final Item it = iter.next();
     // input is empty
     if(it == null) {
-      if(type.mayBeZero()) return Empty.ITER;
-      throw NOTREAT.get(info, description(), Empty.SEQ, type);
+      if(as.mayBeZero()) return Empty.ITER;
+      throw NOTREAT.get(info, description(), Empty.SEQ, as);
     }
     // treat as empty sequence
-    if(type.occ == Occ.ZERO) throw NOTREAT.get(info, description(), it.type, type);
+    if(as.occ == Occ.ZERO) throw NOTREAT.get(info, description(), it.type, as);
 
-    if(type.zeroOrOne()) {
-      if(iter.next() != null) throw NOTREATS.get(info, description(), type);
-      if(!it.type.instanceOf(type.type)) throw NOTREAT.get(info, description(), it.type, type);
+    if(as.zeroOrOne()) {
+      if(iter.next() != null) throw NOTREATS.get(info, description(), as);
+      if(!it.type.instanceOf(as.type)) throw NOTREAT.get(info, description(), it.type, as);
       return it.iter();
     }
 
@@ -68,7 +72,7 @@ public final class Treat extends Single {
       @Override
       public Item next() throws QueryException {
         if(i == null) return null;
-        if(!i.type.instanceOf(type.type)) throw NOTREAT.get(info, description(), i.type, type);
+        if(!i.type.instanceOf(as.type)) throw NOTREAT.get(info, description(), i.type, as);
         final Item ii = i;
         i = iter.next();
         return ii;
@@ -83,39 +87,39 @@ public final class Treat extends Single {
     final long len = val.size();
     // input is empty
     if(len == 0) {
-      if(type.mayBeZero()) return val;
-      throw NOTREAT.get(info, description(), Empty.SEQ, type);
+      if(as.mayBeZero()) return val;
+      throw NOTREAT.get(info, description(), Empty.SEQ, as);
     }
     // treat as empty sequence
-    if(type.occ == Occ.ZERO) throw NOTREAT.get(info, description(), val.type, type);
+    if(as.occ == Occ.ZERO) throw NOTREAT.get(info, description(), val.type, as);
 
-    if(type.zeroOrOne()) {
-      if(len > 1) throw NOTREATS.get(info, description(), type);
+    if(as.zeroOrOne()) {
+      if(len > 1) throw NOTREATS.get(info, description(), as);
       final Item it = val.itemAt(0);
-      if(!it.type.instanceOf(type.type)) throw NOTREAT.get(info, description(), it.type, type);
+      if(!it.type.instanceOf(as.type)) throw NOTREAT.get(info, description(), it.type, as);
       return it;
     }
 
     for(long i = 0; i < len; i++) {
       final Item it = val.itemAt(i);
-      if(!it.type.instanceOf(type.type))
-        throw NOTREAT.get(info, description(), it.type, type);
+      if(!it.type.instanceOf(as.type))
+        throw NOTREAT.get(info, description(), it.type, as);
     }
     return val;
   }
 
   @Override
   public Expr copy(final QueryContext ctx, final VarScope scp, final IntObjMap<Var> vs) {
-    return new Treat(info, expr.copy(ctx, scp, vs), type);
+    return new Treat(info, expr.copy(ctx, scp, vs), as);
   }
 
   @Override
   public void plan(final FElem plan) {
-    addPlan(plan, planElem(TYP, type), expr);
+    addPlan(plan, planElem(TYP, as), expr);
   }
 
   @Override
   public String toString() {
-    return '(' + expr.toString() + ") " + TREAT + ' ' + AS + ' ' + type;
+    return '(' + expr.toString() + ") " + TREAT + ' ' + AS + ' ' + as;
   }
 }

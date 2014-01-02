@@ -76,8 +76,8 @@ public final class Empty extends Value {
   }
 
   @Override
-  public SeqType type() {
-    return SeqType.EMP;
+  public ExtSeqType type() {
+    return ExtSeqType.get(SeqType.EMP);
   }
 
   @Override

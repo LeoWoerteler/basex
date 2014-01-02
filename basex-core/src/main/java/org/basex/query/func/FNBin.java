@@ -201,6 +201,7 @@ public class FNBin extends StandardFunc {
   private Iter toOctetsIter(final QueryContext ctx) throws QueryException {
     final B64 b = b64(expr[0], false, ctx);
     final byte[] bytes = b.binary(info);
+    final int size = bytes.length;
     return new ValueIter() {
       int c;
       @Override

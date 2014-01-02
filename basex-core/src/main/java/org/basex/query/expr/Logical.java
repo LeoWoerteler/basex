@@ -23,7 +23,7 @@ public abstract class Logical extends Arr {
    */
   Logical(final InputInfo ii, final Expr[] e) {
     super(ii, e);
-    type = SeqType.BLN;
+    type = ExtSeqType.get(SeqType.BLN);
   }
 
   @Override

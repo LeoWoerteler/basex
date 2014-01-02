@@ -26,14 +26,15 @@ public abstract class CName extends CFrag {
   /**
    * Constructor.
    * @param d description
+   * @param t sequence type
    * @param sctx static context
    * @param ii input info
    * @param n name
    * @param v attribute values
    */
-  CName(final String d, final StaticContext sctx, final InputInfo ii, final Expr n,
+  CName(final String d, final SeqType t, final StaticContext sctx, final InputInfo ii, final Expr n,
       final Expr... v) {
-    super(sctx, ii, v);
+    super(t, sctx, ii, v);
     name = n;
     desc = d;
   }
@@ -111,7 +112,7 @@ public abstract class CName extends CFrag {
 
   @Override
   public final String toString() {
-    return toString(desc + (name.type().eq(SeqType.QNM) ? " " + name :
+    return toString(desc + (name.type().seqType().eq(SeqType.QNM) ? " " + name :
       " { " + name + " }"));
   }
 

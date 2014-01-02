@@ -128,7 +128,7 @@ public final class CmpG extends Cmp {
   public CmpG(final Expr e1, final Expr e2, final OpG o, final Collation coll, final InputInfo ii) {
     super(ii, e1, e2, coll);
     op = o;
-    type = SeqType.BLN;
+    type = ExtSeqType.get(SeqType.BLN);
   }
 
   @Override
@@ -179,7 +179,7 @@ public final class CmpG extends Cmp {
         e = Pos.get(op.op, e2, e, info);
       }
       if(e != this) ctx.compInfo(OPTWRITE, this);
-    } else if(e1.type().eq(SeqType.BLN) && (op == OpG.EQ && e2 == Bln.FALSE ||
+    } else if(e1.seqType().eq(SeqType.BLN) && (op == OpG.EQ && e2 == Bln.FALSE ||
         op == OpG.NE && e2 == Bln.TRUE)) {
       // (A = false()) -> not(A)
       e = Function.NOT.get(null, info, e1);
@@ -204,7 +204,7 @@ public final class CmpG extends Cmp {
     // checking one direction is sufficient, as operators may have been swapped
     return (op == OpG.EQ && expr[1] == Bln.TRUE ||
             op == OpG.NE && expr[1] == Bln.FALSE) &&
-      expr[0].type().eq(SeqType.BLN) ? expr[0] : this;
+      expr[0].seqType().eq(SeqType.BLN) ? expr[0] : this;
   }
 
   @Override
@@ -327,7 +327,7 @@ public final class CmpG extends Cmp {
     final IndexType ind = text ? IndexType.TEXT : IndexType.ATTRIBUTE;
     final Expr arg = expr[1];
     if(!arg.isValue()) {
-      final SeqType t = arg.type();
+      final SeqType t = arg.seqType();
       /* index access is not possible if returned type is no string or not untyped, if
          expression depends on context, or if it is non-deterministic. examples:
          //*[text() = 1]

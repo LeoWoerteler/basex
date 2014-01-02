@@ -148,21 +148,22 @@ public final class FNSeq extends StandardFunc {
     if(sig == Function.INDEX_OF || sig == Function.INSERT_BEFORE) return this;
 
     // pre-evaluate distinct values
-    final SeqType st = expr[0].type();
-    final Type t = st.type;
+    final ExtSeqType st = expr[0].type();
+    final Type t = st.seqType().type;
     if(sig == Function.DISTINCT_VALUES && expr.length == 1) {
-      type = t.isNode() ? SeqType.get(AtomType.ATM, st.occ) : st;
+      type = t.isNode() ? ExtSeqType.get(AtomType.ATM.seqType(), st.minSize(),
+          st.isBounded() ? st.maxSize() : -1) : st;
       return cmpDist(ctx);
     }
 
     // all other types will return existing types
     Occ o = Occ.ZERO_MORE;
     // at most one returned item
-    if(sig == Function.SUBSEQUENCE && st.one()) o = Occ.ZERO_ONE;
+    if(sig == Function.SUBSEQUENCE && st.size() == 1) o = Occ.ZERO_ONE;
 
     // head will return at most one item
     else if(sig == Function.HEAD) o = Occ.ZERO_ONE;
-    type = SeqType.get(t, o);
+    type = ExtSeqType.get(SeqType.get(t, o));
 
     return this;
   }

@@ -39,7 +39,7 @@ public final class PartFunc extends Arr {
     super(ii, Array.add(arg, fn));
     sc = sctx;
     holes = hl;
-    type = SeqType.FUN_O;
+    type = ExtSeqType.get(SeqType.FUN_O);
   }
 
   @Override
@@ -53,14 +53,14 @@ public final class PartFunc extends Arr {
     final Expr f = expr[expr.length - 1];
     if(allAreValues()) return preEval(ctx);
 
-    final SeqType t = f.type();
+    final SeqType t = f.seqType();
     if(t.instanceOf(SeqType.FUN_O) && t.type != FuncType.ANY_FUN) {
       final FuncType ft = (FuncType) t.type;
       final int arity = expr.length + holes.length - 1;
       if(ft.args.length != arity) throw INVARITY.get(info, f, arity);
       final SeqType[] ar = new SeqType[holes.length];
       for(int i = 0; i < holes.length; i++) ar[i] = ft.args[holes[i]];
-      type = FuncType.get(ft.ret, ar).seqType();
+      type = ExtSeqType.get(FuncType.get(ft.ret, ar).seqType());
     }
 
     return this;

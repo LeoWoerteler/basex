@@ -34,7 +34,7 @@ public final class Castable extends Single {
     super(ii, e);
     sc = sctx;
     seq = s;
-    type = SeqType.BLN;
+    type = ExtSeqType.get(SeqType.BLN);
   }
 
   @Override

@@ -25,8 +25,7 @@ public final class CTxt extends CFrag {
    * @param t text
    */
   public CTxt(final StaticContext sctx, final InputInfo ii, final Expr t) {
-    super(sctx, ii, t);
-    type = SeqType.TXT_ZO;
+    super(SeqType.TXT_ZO, sctx, ii, t);
   }
 
   @Override

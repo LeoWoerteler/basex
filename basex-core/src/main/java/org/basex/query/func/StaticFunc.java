@@ -87,7 +87,7 @@ public final class StaticFunc extends StaticDecl implements XQFunction {
       // remove redundant casts
       if((declType.type == AtomType.BLN || declType.type == AtomType.FLT ||
           declType.type == AtomType.DBL || declType.type == AtomType.QNM ||
-          declType.type == AtomType.URI) && declType.eq(expr.type())) {
+          declType.type == AtomType.URI) && declType.eq(expr.seqType())) {
         ctx.compInfo(OPTCAST, declType);
         cast = false;
       }
@@ -168,6 +168,14 @@ public final class StaticFunc extends StaticDecl implements XQFunction {
   @Override
   public Ann annotations() {
     return ann;
+  }
+
+  @Override
+  public ExtSeqType returnType() {
+    if(!cast) return expr.type();
+    final ExtSeqType extDecl = ExtSeqType.get(declType);
+    final ExtSeqType res = extDecl.intersect(expr.type());
+    return res != null ? res : extDecl;
   }
 
   @Override

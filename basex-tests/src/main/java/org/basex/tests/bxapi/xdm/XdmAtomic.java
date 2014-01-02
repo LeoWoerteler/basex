@@ -44,7 +44,7 @@ final class XdmAtomic extends XdmItem {
 
   @Override
   public SeqType getType() {
-    return item.type();
+    return item.seqType();
   }
 
   @Override

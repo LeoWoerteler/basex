@@ -29,15 +29,14 @@ public abstract class ParseExpr extends Expr {
   /** Input information. */
   public final InputInfo info;
   /** Static type. */
-  public SeqType type;
-  /** Cardinality of result; unknown if set to -1. */
-  protected long size = -1;
+  public ExtSeqType type;
 
   /**
    * Constructor.
    * @param ii input info
    */
   protected ParseExpr(final InputInfo ii) {
+    type = ExtSeqType.ANY;
     info = ii;
   }
 
@@ -79,7 +78,6 @@ public abstract class ParseExpr extends Expr {
    */
   protected final <T extends ParseExpr> T copyType(final T e) {
     e.type = type;
-    e.size = size;
     return e;
   }
 
@@ -104,13 +102,18 @@ public abstract class ParseExpr extends Expr {
   }
 
   @Override
-  public SeqType type() {
-    return type != null ? type : SeqType.ITEM_ZM;
+  public ExtSeqType type() {
+    return type != null ? type : ExtSeqType.ANY;
+  }
+
+  @Override
+  public SeqType seqType() {
+    return type == null ? SeqType.ITEM_ZM : type.seqType();
   }
 
   @Override
   public final long size() {
-    return size == -1 ? type().occ() : size;
+    return type().size();
   }
 
   // OPTIMIZATIONS ============================================================
@@ -145,7 +148,7 @@ public abstract class ParseExpr extends Expr {
    * @return expression
    */
   protected static Expr compBln(final Expr e, final InputInfo ii) {
-    return e.type().eq(SeqType.BLN) ? e : Function.BOOLEAN.get(null, ii, e);
+    return e.seqType().eq(SeqType.BLN) ? e : Function.BOOLEAN.get(null, ii, e);
   }
 
   // VALIDITY CHECKS ==========================================================

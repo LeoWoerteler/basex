@@ -392,7 +392,7 @@ public final class SeqType {
    * @throws QueryException query exception
    */
   public Value treat(final Value val, final InputInfo ii) throws QueryException {
-    if(val.type().instanceOf(this)) return val;
+    if(val.seqType().instanceOf(this)) return val;
 
     final int size = (int) val.size();
     if(!occ.check(size)) throw Err.treatError(ii, this, val);

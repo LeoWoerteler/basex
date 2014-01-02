@@ -29,7 +29,7 @@ abstract class Set extends Arr {
    */
   Set(final InputInfo ii, final Expr[] l) {
     super(ii, l);
-    type = SeqType.NOD_ZM;
+    type = ExtSeqType.get(SeqType.NOD_ZM);
   }
 
   @Override

@@ -26,7 +26,6 @@ final class IterPosFilter extends Filter {
     off = o;
     type = f.type;
     last = f.last;
-    size = f.size;
     pos = f.pos;
   }
 

@@ -64,6 +64,11 @@ public final class Map extends FItem {
   }
 
   @Override
+  public ExtSeqType returnType() {
+    return ExtSeqType.ANY;
+  }
+
+  @Override
   public Item invItem(final QueryContext ctx, final InputInfo ii, final Value... args)
       throws QueryException {
     return get(args[0].item(ctx, ii), ii).item(ctx, ii);

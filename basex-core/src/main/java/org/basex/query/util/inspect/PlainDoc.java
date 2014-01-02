@@ -77,7 +77,7 @@ public final class PlainDoc extends Inspect {
     final FElem variable = elem("variable", parent);
     variable.add("name", sv.name.string());
     if(sv.name.uri().length != 0) variable.add("uri", sv.name.uri());
-    type(sv.type(), variable);
+    type(sv.type().seqType(), variable);
     comment(sv, variable);
     annotation(sv.ann, variable, true);
     return variable;
@@ -136,7 +136,7 @@ public final class PlainDoc extends Inspect {
       }
     }
 
-    final SeqType rt = sf != null ? sf.type() : ftype.ret;
+    final SeqType rt = sf != null ? sf.type().seqType() : ftype.ret;
     final FElem ret = type(rt, elem("return", function));
     final TokenList returns = doc != null ? doc.get(DOC_RETURN) : null;
     if(returns != null) for(final byte[] val : returns) add(val, ctx.context, ret);

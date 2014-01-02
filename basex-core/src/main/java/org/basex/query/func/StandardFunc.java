@@ -51,7 +51,7 @@ public abstract class StandardFunc extends Arr {
     super(ii, args);
     sc = sctx;
     sig = s;
-    type = sig.ret;
+    type = ExtSeqType.get(sig.ret);
   }
 
   @Override
@@ -138,7 +138,7 @@ public abstract class StandardFunc extends Arr {
 
   @Override
   public final boolean isVacuous() {
-    return !has(Flag.UPD) && type.eq(SeqType.EMP);
+    return !has(Flag.UPD) && type.seqType().eq(SeqType.EMP);
   }
 
   @Override

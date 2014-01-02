@@ -31,13 +31,11 @@ public final class Var extends ExprInfo {
 
   /** Stack slot number. */
   int slot = -1;
-  /** Expected result size. */
-  long size = -1;
 
   /** Flag for function parameters. */
   private final boolean param;
   /** Actual return type (by type inference). */
-  private SeqType inType;
+  private ExtSeqType inType;
   /** Flag for function conversion. */
   private boolean promote;
 
@@ -54,11 +52,10 @@ public final class Var extends ExprInfo {
     sc = sctx;
     name = n;
     declType = typ == null || typ.eq(SeqType.ITEM_ZM) ? null : typ;
-    inType = SeqType.ITEM_ZM;
+    inType = declType == null ? ExtSeqType.ANY : ExtSeqType.get(declType);
     id = ctx.varIDs++;
     param = fun;
     promote = fun;
-    size = inType.occ();
   }
 
   /**
@@ -82,21 +79,19 @@ public final class Var extends ExprInfo {
     this(ctx, sctx, var.name, var.declType, var.param);
     promote = var.promote;
     inType = var.inType;
-    size = var.size;
   }
 
   /**
    * Type of values bound to this variable.
-   * @return type (not {@code null})
+   * @return type, not {@code null}
    */
-  public SeqType type() {
-    final SeqType intersect = declType != null ? declType.intersect(inType) : null;
-    return intersect != null ? intersect : declType != null ? declType : inType;
+  public ExtSeqType type() {
+    return inType;
   }
 
   /**
    * Declared type of this variable.
-   * @return declared type, possibly {@code null}
+   * @return declared type, not {@code null}
    */
   public SeqType declaredType() {
     return declType == null ? SeqType.ITEM_ZM : declType;
@@ -110,20 +105,20 @@ public final class Var extends ExprInfo {
    * @param ii input info
    * @throws QueryException query exception
    */
-  public void refineType(final SeqType t, final QueryContext ctx, final InputInfo ii)
+  public void refineType(final ExtSeqType t, final QueryContext ctx, final InputInfo ii)
       throws QueryException {
 
     if(t == null) return;
     if(declType != null) {
-      if(declType.occ.intersect(t.occ) == null) throw INVCAST.get(ii, t, declType);
-      if(!t.convertibleTo(declType)) return;
+      if(declType.occ.intersect(t.occ()) == null) throw INVCAST.get(ii, t, declType);
+      if(!t.seqType().convertibleTo(declType)) return;
     }
 
     if(!inType.eq(t) && !inType.instanceOf(t)) {
-      final SeqType is = inType.intersect(t);
+      final ExtSeqType is = inType.intersect(t);
       if(is != null) {
         inType = is;
-        if(declType != null && inType.instanceOf(declType)) {
+        if(declType != null && inType.seqType().instanceOf(declType)) {
           ctx.compInfo(QueryText.OPTCAST, this);
           declType = null;
         }
@@ -223,14 +218,14 @@ public final class Var extends ExprInfo {
 
   /**
    * Tries to adopt the given type check.
-   * @param t type to check
+   * @param type type to check
    * @param prom if function conversion should be applied
    * @return {@code true} if the check could be adopted, {@code false} otherwise
    */
-  public boolean adoptCheck(final SeqType t, final boolean prom) {
-    if(declType == null || t.instanceOf(declType)) {
-      declType = t;
-    } else if(!declType.instanceOf(t)) {
+  public boolean adoptCheck(final SeqType type, final boolean prom) {
+    if(declType == null || type.instanceOf(declType)) {
+      declType = type;
+    } else if(!declType.instanceOf(type)) {
       return false;
     }
 

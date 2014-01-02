@@ -4,6 +4,7 @@ import static org.basex.query.QueryText.*;
 
 import org.basex.query.*;
 import org.basex.query.value.node.*;
+import org.basex.query.value.type.*;
 import org.basex.util.*;
 
 /**
@@ -17,14 +18,15 @@ public abstract class CFrag extends Arr {
   final StaticContext sc;
   /**
    * Constructor.
+   * @param t fragment type
    * @param sctx static context
    * @param ii input info
    * @param n name
    */
-  CFrag(final StaticContext sctx, final InputInfo ii, final Expr... n) {
+  CFrag(final SeqType t, final StaticContext sctx, final InputInfo ii, final Expr... n) {
     super(ii, n);
     sc = sctx;
-    size = 1;
+    type = ExtSeqType.get(t);
   }
 
   @Override

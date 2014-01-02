@@ -46,6 +46,12 @@ public interface XQFunctionExpr {
   Ann annotations();
 
   /**
+   * Inferred return type of this function.
+   * @return inferred return type
+   */
+  ExtSeqType returnType();
+
+  /**
    * Tries to inline this function with the given argument expressions.
    * @param exprs argument expressions
    * @param ctx query context

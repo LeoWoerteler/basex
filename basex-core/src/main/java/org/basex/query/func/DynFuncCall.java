@@ -44,11 +44,11 @@ public final class DynFuncCall extends FuncCall {
   public Expr optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
     final int ar = expr.length - 1;
     final Expr f = expr[ar];
-    final Type t = f.type().type;
+    final Type t = f.seqType().type;
     if(t instanceof FuncType) {
       final FuncType ft = (FuncType) t;
       if(ft.args != null && ft.args.length != ar) throw INVARITY.get(info, f, ar);
-      if(ft.ret != null) type = ft.ret;
+      if(ft.ret != null) type = ExtSeqType.get(ft.ret);
     }
 
     if(f instanceof XQFunctionExpr) {
@@ -59,6 +59,8 @@ public final class DynFuncCall extends FuncCall {
       final Expr[] args = Arrays.copyOf(expr, expr.length - 1);
       final Expr inl = ((XQFunctionExpr) f).inlineExpr(args, ctx, scp, info);
       if(inl != null) return inl;
+
+      type = ((XQFunctionExpr) f).returnType();
     }
 
     return this;

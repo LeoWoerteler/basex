@@ -8,7 +8,6 @@ import org.basex.query.value.*;
 import org.basex.query.value.item.*;
 import org.basex.query.value.node.*;
 import org.basex.query.value.type.*;
-import org.basex.query.value.type.SeqType.Occ;
 import org.basex.util.*;
 
 /**
@@ -51,7 +50,7 @@ public final class ItemSeq extends Seq {
   }
 
   @Override
-  public SeqType type() {
+  public ExtSeqType type() {
     if(ret == null) {
       Type t = item[0].type;
       for(int s = 1; s < size; s++) {
@@ -63,7 +62,7 @@ public final class ItemSeq extends Seq {
       ret = t;
       type = t;
     }
-    return SeqType.get(ret, Occ.ONE_MORE);
+    return ExtSeqType.get(type.seqType(), size, size);
   }
 
   @Override

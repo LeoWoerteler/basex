@@ -27,16 +27,12 @@ public final class Context extends Simple {
    */
   public Context(final InputInfo ii) {
     super(ii);
-    type = SeqType.ITEM;
-    size = 1;
+    type = ExtSeqType.get(SeqType.ITEM);
   }
 
   @Override
   public Context compile(final QueryContext ctx, final VarScope scp) {
-    if(ctx.value != null) {
-      type = ctx.value.type();
-      size = ctx.value.size();
-    }
+    if(ctx.value != null) type = ctx.value.type();
     return this;
   }
 

@@ -30,7 +30,7 @@ abstract class Update extends Arr {
   Update(final StaticContext sctx, final InputInfo ii, final Expr... e) {
     super(ii, e);
     sc = sctx;
-    type = SeqType.EMP;
+    type = ExtSeqType.get(SeqType.EMP);
   }
 
   @Override

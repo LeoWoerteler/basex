@@ -76,7 +76,7 @@ public final class XQDoc extends Inspect {
       if(sv.name.hasPrefix()) nsCache.put(sv.name.prefix(), sv.name.uri());
       comment(sv, variable);
       annotations(sv.ann, variable);
-      type(sv.type(), variable);
+      type(sv.type().seqType(), variable);
     }
 
     // functions
@@ -111,7 +111,7 @@ public final class XQDoc extends Inspect {
           type(t.args[a], fparameter);
         }
       }
-      type(sf.type(), elem("return", function));
+      type(sf.type().seqType(), elem("return", function));
     }
 
     // add namespaces

@@ -111,6 +111,14 @@ public final class InlineFunc extends Single implements Scope, XQFunctionExpr {
   }
 
   @Override
+  public ExtSeqType returnType() {
+    if(ret == null) return expr.type();
+    final ExtSeqType extRet = ExtSeqType.get(ret);
+    final ExtSeqType res = extRet.intersect(expr.type());
+    return res != null ? res : extRet;
+  }
+
+  @Override
   public void compile(final QueryContext ctx) throws QueryException {
     compile(ctx, null);
   }
@@ -156,7 +164,7 @@ public final class InlineFunc extends Single implements Scope, XQFunctionExpr {
 
       expr = expr.compile(ctx, scope);
     } catch(final QueryException qe) {
-      expr = FNInfo.error(qe, ret != null ? ret : expr.type());
+      expr = FNInfo.error(qe, ret != null ? ExtSeqType.get(ret) : expr.type());
     } finally {
       scope.cleanUp(this);
       scope.exit(ctx, fp);
@@ -170,10 +178,9 @@ public final class InlineFunc extends Single implements Scope, XQFunctionExpr {
 
   @Override
   public Expr optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
-    final SeqType r = expr.type();
-    final SeqType retType = ret == null || r.instanceOf(ret) ? r : ret;
-    type = FuncType.get(ann, args, retType).seqType();
-    size = 1;
+    final ExtSeqType r = expr.type();
+    final SeqType retType = ret == null || r.seqType().instanceOf(ret) ? r.seqType() : ret;
+    type = ExtSeqType.get(FuncType.get(ann, args, retType).seqType());
 
     final int fp = scope.enter(ctx);
     try {
@@ -183,7 +190,7 @@ public final class InlineFunc extends Single implements Scope, XQFunctionExpr {
         if (inlined != null) expr = inlined;
       }
     } catch(final QueryException qe) {
-      expr = FNInfo.error(qe, ret != null ? ret : expr.type());
+      expr = FNInfo.error(qe, ret != null ? ExtSeqType.get(ret) : expr.type());
     } finally {
       scope.cleanUp(this);
       scope.exit(ctx, fp);
@@ -258,8 +265,8 @@ public final class InlineFunc extends Single implements Scope, XQFunctionExpr {
 
   @Override
   public FuncItem item(final QueryContext ctx, final InputInfo ii) throws QueryException {
-    final FuncType ft = (FuncType) type().type;
-    final boolean c = ret != null && !expr.type().instanceOf(ret);
+    final FuncType ft = (FuncType) seqType().type;
+    final boolean c = ret != null && !expr.type().seqType().instanceOf(ret);
 
     final Expr body;
     if(!scope.closure().isEmpty()) {
@@ -363,8 +370,8 @@ public final class InlineFunc extends Single implements Scope, XQFunctionExpr {
   }
 
   @Override
-  public SeqType type() {
-    return updating ? SeqType.EMP : super.type();
+  public ExtSeqType type() {
+    return updating ? ExtSeqType.get(SeqType.EMP) : super.type();
   }
 
   @Override

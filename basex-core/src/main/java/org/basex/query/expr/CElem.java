@@ -36,10 +36,9 @@ public final class CElem extends CName {
    */
   public CElem(final StaticContext sctx, final InputInfo ii, final Expr t, final Atts ns,
       final Expr... cont) {
-    super(ELEMENT, sctx, ii, t, cont);
+    super(ELEMENT, SeqType.ELM, sctx, ii, t, cont);
     nspaces = ns == null ? new Atts() : ns;
     comp = ns == null;
-    type = SeqType.ELM;
   }
 
   @Override

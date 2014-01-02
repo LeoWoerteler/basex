@@ -1080,8 +1080,8 @@ public class QueryParser extends InputParser {
           // sequence isn't compatible with the type and can't be assigned
           final Var nv = addVar(v.var.name, null, false);
           // [LW] should be done everywhere
-          if(v.type().one())
-            nv.refineType(SeqType.get(v.type().type, Occ.ONE_MORE), ctx, info());
+          if(v.type().size() == 1)
+            nv.refineType(v.type().withMaxSize(-1), ctx, info());
           ngrp[i] = nv;
           curr.put(nv.name.id(), nv);
         }
@@ -2217,7 +2217,7 @@ public class QueryParser extends InputParser {
 
     final long l = toLong(tok.finish());
     if(l != Long.MIN_VALUE) return Int.get(l);
-    return FNInfo.error(new QueryException(info(), RANGE, tok), SeqType.ITR);
+    return FNInfo.error(new QueryException(info(), RANGE, tok), ExtSeqType.get(SeqType.ITR));
   }
 
   /**
@@ -3828,7 +3828,7 @@ public class QueryParser extends InputParser {
     // go down through the scopes and add bindings to their closures
     while(++i < localVars.size()) {
       final VarContext vctx = localVars.get(i);
-      final Var local = vctx.addVar(var.name, var.type(), false);
+      final Var local = vctx.addVar(var.name, var.declaredType(), false);
       vctx.scope.closure().put(local, new VarRef(ii, var));
       var = local;
     }

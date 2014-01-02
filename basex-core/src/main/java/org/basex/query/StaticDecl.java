@@ -53,7 +53,7 @@ public abstract class StaticDecl extends StaticScope {
    * it is derived from the expression type.
    * @return return type
    */
-  public SeqType type() {
-    return declType != null ? declType : expr.type();
+  public ExtSeqType type() {
+    return declType != null ? ExtSeqType.get(declType) : expr.type();
   }
 }

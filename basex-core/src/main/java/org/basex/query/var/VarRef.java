@@ -43,7 +43,6 @@ public final class VarRef extends ParseExpr {
   @Override
   public VarRef optimize(final QueryContext ctx, final VarScope scp) {
     type = var.type();
-    size = var.size;
     return this;
   }
 

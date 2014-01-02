@@ -113,7 +113,7 @@ public abstract class Preds extends ParseExpr {
     boolean np1 = true;
     boolean np2 = true;
     for(int p = 0; p < preds.length; p++) {
-      final boolean np = !preds[p].type().mayBeNumber() && !preds[p].has(Flag.FCS);
+      final boolean np = !preds[p].seqType().mayBeNumber() && !preds[p].has(Flag.FCS);
       np1 &= np;
       if(p > 0) np2 &= np;
     }
@@ -150,7 +150,7 @@ public abstract class Preds extends ParseExpr {
   @Override
   public boolean has(final Flag flag) {
     for(final Expr p : preds) {
-      if(flag == Flag.FCS && p.type().mayBeNumber() || p.has(flag)) return true;
+      if(flag == Flag.FCS && p.seqType().mayBeNumber() || p.has(flag)) return true;
     }
     return false;
   }

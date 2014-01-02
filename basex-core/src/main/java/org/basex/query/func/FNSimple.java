@@ -11,7 +11,6 @@ import org.basex.query.util.Compare.*;
 import org.basex.query.value.*;
 import org.basex.query.value.item.*;
 import org.basex.query.value.type.*;
-import org.basex.query.value.type.SeqType.Occ;
 import org.basex.query.var.*;
 import org.basex.util.*;
 
@@ -122,7 +121,7 @@ public final class FNSimple extends StandardFunc {
           Bln.get(sig == Function.EMPTY ^ !e.isEmpty());
       case BOOLEAN:
         // simplify, e.g.: if(boolean(A)) -> if(A)
-        return e.type().eq(SeqType.BLN) ? e : this;
+        return e.seqType().eq(SeqType.BLN) ? e : this;
       case NOT:
         if(e.isFunction(Function.EMPTY)) {
           // simplify: not(empty(A)) -> exists(A)
@@ -147,14 +146,14 @@ public final class FNSimple extends StandardFunc {
         }
         return this;
       case ZERO_OR_ONE:
-        type = SeqType.get(e.type().type, Occ.ZERO_ONE);
+        type = e.type().withMaxSize(1);
         return e.type().zeroOrOne() ? e : this;
       case EXACTLY_ONE:
-        type = SeqType.get(e.type().type, Occ.ONE);
-        return e.type().one() ? e : this;
+        type = e.type().withSize(1);
+        return e.type().size() == 1 ? e : this;
       case ONE_OR_MORE:
-        type = SeqType.get(e.type().type, Occ.ONE_MORE);
-        return e.type().mayBeZero() ? this : e;
+        type = e.type().withMinSize(1);
+        return e.type().minSize() == 0 ? this : e;
       case UNORDERED:
         return e;
       default:
@@ -170,10 +169,10 @@ public final class FNSimple extends StandardFunc {
     Expr ex = this;
     if(sig == Function.BOOLEAN) {
       // (test)[boolean(A)] -> (test)[A]
-      if(!e.type().mayBeNumber()) ex = e;
+      if(!e.seqType().mayBeNumber()) ex = e;
     } else if(sig == Function.EXISTS) {
       // if(exists(node*)) -> if(node*)
-      if(e.type().type.isNode()) ex = e;
+      if(e.seqType().type.isNode()) ex = e;
     }
     if(ex != this) ctx.compInfo(QueryText.OPTWRITE, this);
     return ex;

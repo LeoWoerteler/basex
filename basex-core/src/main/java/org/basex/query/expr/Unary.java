@@ -36,9 +36,10 @@ public final class Unary extends Single {
   public Expr compile(final QueryContext ctx, final VarScope scp) throws QueryException {
     super.compile(ctx, scp);
     type = expr.type();
-    if(!type.type.isNumber()) {
+    if(!seqType().type.isNumber()) {
       // expression will always yield a number, empty sequence or error
-      type = type.mayBeZero() ? SeqType.ITR_ZO : SeqType.ITR;
+      // [LW] can be any numeric type, not only integer
+      type = ExtSeqType.get(type.minSize() == 0 ? SeqType.ITR_ZO : SeqType.ITR);
     }
     return expr.isValue() ? preEval(ctx) : this;
   }

@@ -58,7 +58,7 @@ public final class CmpSR extends Single {
     mni = in;
     max = mx;
     mxi = ix;
-    type = SeqType.BLN;
+    type = ExtSeqType.get(SeqType.BLN);
     atomic = e.type().zeroOrOne();
   }
 

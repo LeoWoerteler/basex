@@ -41,7 +41,7 @@ public abstract class Step extends Preds {
    */
   public static Step get(final InputInfo ii, final Axis a, final Test t, final Expr... p) {
     boolean num = false;
-    for(final Expr pr : p) num |= pr.type().mayBeNumber() || pr.has(Flag.FCS);
+    for(final Expr pr : p) num |= pr.seqType().mayBeNumber() || pr.has(Flag.FCS);
     return num ? new AxisStep(ii, a, t, p) : new IterStep(ii, a, t, p);
   }
 
@@ -56,7 +56,7 @@ public abstract class Step extends Preds {
     super(ii, p);
     axis = a;
     test = t;
-    type = SeqType.NOD_ZM;
+    type = ExtSeqType.get(SeqType.NOD_ZM);
   }
 
   @Override

@@ -16,7 +16,6 @@ import org.basex.query.value.item.*;
 import org.basex.query.value.node.*;
 import org.basex.query.value.seq.*;
 import org.basex.query.value.type.*;
-import org.basex.query.value.type.SeqType.Occ;
 import org.basex.query.var.*;
 import org.basex.util.*;
 import org.basex.util.hash.*;
@@ -139,13 +138,12 @@ public final class For extends Clause {
 
   @Override
   public For optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
-    final SeqType tp = expr.type();
-    final boolean emp = empty && tp.mayBeZero();
-    type = SeqType.get(tp.type, emp ? Occ.ZERO_ONE : Occ.ONE);
+    final ExtSeqType tp = expr.type();
+    final boolean emp = empty && tp.minSize() == 0;
+    type = tp.withSize(emp ? 0 : 1, 1);
     var.refineType(type, ctx, info);
-    if(pos != null) pos.refineType(SeqType.ITR, ctx, info);
-    if(score != null) score.refineType(SeqType.DBL, ctx, info);
-    size = emp ? -1 : 1;
+    if(pos != null) pos.refineType(ExtSeqType.get(SeqType.ITR), ctx, info);
+    if(score != null) score.refineType(ExtSeqType.get(SeqType.DBL), ctx, info);
     return this;
   }
 
@@ -210,7 +208,7 @@ public final class For extends Clause {
    * @return {@code true} if the clause was converted, {@code false} otherwise
    */
   boolean asLet(final List<Clause> clauses, final int p) {
-    if(expr.size() != 1 && !expr.type().one()) return false;
+    if(expr.type().size() != 1) return false;
     clauses.set(p, Let.fromFor(this));
     if(score != null) clauses.add(p + 1, Let.fromForScore(this));
     if(pos != null) clauses.add(p + 1, new Let(pos, Int.get(1), false, info));
@@ -231,7 +229,7 @@ public final class For extends Clause {
     final Expr r = p.inline(ctx, scp, var, new Context(info)), e = r == null ? p : r;
 
     // attach predicates to axis path or filter, or create a new filter
-    final Expr a = e.type().mayBeNumber() ? Function.BOOLEAN.get(null, info, e) : e;
+    final Expr a = e.seqType().mayBeNumber() ? Function.BOOLEAN.get(null, info, e) : e;
 
     // add to clause expression
     if(expr instanceof AxisPath) {
@@ -246,9 +244,14 @@ public final class For extends Clause {
   }
 
   @Override
-  long calcSize(final long count) {
-    final long sz = expr.size();
-    return sz < 0 ? -1 : sz > 0 ? sz * count : empty ? 1 : 0;
+  void calcSize(final long[] count) {
+    final ExtSeqType tp = expr.type();
+    count[0] *= Math.max(tp.minSize(), empty ? 1 : 0);
+    if(tp.isBounded()) {
+      if(count[1] >= 0) count[1] *= Math.max(tp.maxSize(), empty ? 1 : 0);
+    } else if(count[1] != 0) {
+      count[1] = -1;
+    }
   }
 
   @Override

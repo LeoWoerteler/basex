@@ -16,7 +16,6 @@ import org.basex.query.value.item.*;
 import org.basex.query.value.node.*;
 import org.basex.query.value.seq.*;
 import org.basex.query.value.type.*;
-import org.basex.query.value.type.SeqType.Occ;
 import org.basex.query.var.*;
 import org.basex.util.*;
 import org.basex.util.hash.*;
@@ -261,8 +260,8 @@ public final class Window extends Clause {
 
   @Override
   public Clause optimize(final QueryContext cx, final VarScope sc) throws QueryException {
-    final SeqType t = expr.type();
-    var.refineType(t.withOcc(Occ.ZERO_MORE), cx, info);
+    final ExtSeqType t = expr.type();
+    var.refineType(t.withMinSize(0), cx, info);
     return this;
   }
 
@@ -342,8 +341,10 @@ public final class Window extends Clause {
   }
 
   @Override
-  long calcSize(final long cnt) {
-    return expr.isEmpty() ? 0 : -1;
+  void calcSize(final long[] cnt) {
+    final ExtSeqType tp = expr.type();
+    cnt[0] = 0;
+    cnt[1] = tp.isBounded() && cnt[1] >= 0 ? cnt[1] * tp.maxSize() : -1;
   }
 
   @Override

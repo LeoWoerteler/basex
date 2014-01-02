@@ -27,7 +27,7 @@ public final class Range extends Arr {
    */
   public Range(final InputInfo ii, final Expr e1, final Expr e2) {
     super(ii, e1, e2);
-    type = SeqType.ITR_ZM;
+    type = ExtSeqType.get(SeqType.ITR_ZM);
   }
 
   @Override

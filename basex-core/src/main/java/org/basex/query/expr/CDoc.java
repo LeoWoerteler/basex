@@ -24,8 +24,7 @@ public final class CDoc extends CFrag {
    * @param e expression
    */
   public CDoc(final StaticContext sctx, final InputInfo ii, final Expr e) {
-    super(sctx, ii, e);
-    type = SeqType.DOC_O;
+    super(SeqType.DOC_O, sctx, ii, e);
   }
 
   @Override

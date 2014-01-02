@@ -213,13 +213,11 @@ public final class GFLWOR extends ParseExpr {
 
     mergeWheres();
 
-    size = calcSize();
-    if(size == 0 && !(has(Flag.NDT) || has(Flag.UPD))) {
+    type = calcSize();
+    if(type.size() == 0 && !(has(Flag.NDT) || has(Flag.UPD))) {
       ctx.compInfo(QueryText.OPTWRITE, this);
       return Empty.SEQ;
     }
-
-    type = SeqType.get(ret.type().type, size);
 
     if(clauses.getFirst() instanceof Where) {
       // where A <...> return B  ===>  if(A) then <...> return B else ()
@@ -234,13 +232,15 @@ public final class GFLWOR extends ParseExpr {
    * Pre-calculates the number of results of this FLWOR expression.
    * @return result size if statically computable, {@code -1} otherwise
    */
-  private long calcSize() {
-    final long output = ret.size();
-    if(output == 0) return 0;
+  private ExtSeqType calcSize() {
+    final ExtSeqType output = ret.type();
+    if(output.maxSize() == 0) return output;
 
-    long tuples = 1;
-    for(final Clause c : clauses) if((tuples = c.calcSize(tuples)) <= 0) break;
-    return tuples == 0 ? 0 : output < 0 || tuples < 0 ? -1 : tuples * output;
+    long[] tuples = { 1, 1 };
+    for(final Clause c : clauses) c.calcSize(tuples);
+    final long min = tuples[0] * output.minSize(),
+        max = output.isBounded() && tuples[1] >= 0 ? output.maxSize() * tuples[1] : -1;
+    return output.withSize(min, max);
   }
 
   /**
@@ -547,15 +547,16 @@ public final class GFLWOR extends ParseExpr {
    * @return usage count
    */
   private VarUsage count(final Var v, final int p) {
-    long c = 1;
+    final long[] c = { 1, 1 };
     VarUsage uses = VarUsage.NEVER;
     final ListIterator<Clause> iter = clauses.listIterator(p);
     while(iter.hasNext()) {
       final Clause cl = iter.next();
-      uses = uses.plus(cl.count(v).times(c));
-      c = cl.calcSize(c);
+      final long maxInTuples = c[1];
+      uses = uses.plus(cl.count(v).times(maxInTuples));
+      cl.calcSize(c);
     }
-    return uses.plus(ret.count(v).times(c));
+    return uses.plus(ret.count(v).times(c[1]));
   }
 
   @Override
@@ -674,8 +675,11 @@ public final class GFLWOR extends ParseExpr {
 
   @Override
   public void markTailCalls(final QueryContext ctx) {
-    long n = 1;
-    for(final Clause c : clauses) if((n = c.calcSize(n)) != 1) return;
+    final long[] minMax = { 1, 1 };
+    for(final Clause c : clauses) {
+      c.calcSize(minMax);
+      if(minMax[1] > 1) return;
+    }
     ret.markTailCalls(ctx);
   }
 
@@ -689,7 +693,7 @@ public final class GFLWOR extends ParseExpr {
   @Override
   public Expr typeCheck(final TypeCheck tc, final QueryContext ctx, final VarScope scp)
       throws QueryException {
-    if(tc.type.occ != Occ.ZERO_MORE) return null;
+    if(tc.check.occ != Occ.ZERO_MORE) return null;
     ret = tc.check(ret, ctx, scp);
     return optimize(ctx, scp);
   }
@@ -816,10 +820,9 @@ public final class GFLWOR extends ParseExpr {
     }
 
     /**
-     * Calculates the number of results.
-     * @param count number of incoming tuples, must be greater than zero
-     * @return number of outgoing tuples if known, {@code -1} otherwise
+     * Calculates the number of tuples produced by this clause.
+     * @param tuples minimum and maximum number of incoming tuples
      */
-    abstract long calcSize(long count);
+    abstract void calcSize(long[] tuples);
   }
 }

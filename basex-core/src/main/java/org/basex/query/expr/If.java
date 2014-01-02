@@ -80,7 +80,7 @@ public final class If extends Arr {
     }
 
     // rewritings for constant booleans
-    if(expr[0].type().eq(SeqType.BLN) && expr[1].type().eq(SeqType.BLN)) {
+    if(expr[0].seqType().eq(SeqType.BLN) && expr[1].seqType().eq(SeqType.BLN)) {
       final Expr a = cond, b = expr[0], c = expr[1];
       if(b == Bln.TRUE) {
         if(c == Bln.FALSE) {

@@ -9,7 +9,6 @@ import org.basex.query.util.*;
 import org.basex.query.value.item.*;
 import org.basex.query.value.node.*;
 import org.basex.query.value.type.*;
-import org.basex.query.value.type.SeqType.Occ;
 import org.basex.query.var.*;
 import org.basex.util.*;
 import org.basex.util.hash.*;
@@ -177,8 +176,7 @@ public final class CmpV extends Cmp {
 
     final Expr e1 = expr[0];
     final Expr e2 = expr[1];
-    type = SeqType.get(AtomType.BLN, e1.size() == 1 && e2.size() == 1 ?
-        Occ.ONE : Occ.ZERO_ONE);
+    type = ExtSeqType.get(e1.size() == 1 && e2.size() == 1 ? SeqType.BLN : SeqType.BLN_ZO);
 
     Expr e = this;
     if(oneIsEmpty()) {
@@ -192,7 +190,7 @@ public final class CmpV extends Cmp {
       // position() CMP number
       e = Pos.get(op, e2, e, info);
       if(e != this) ctx.compInfo(OPTWRITE, this);
-    } else if(e1.type().eq(SeqType.BLN) && (op == OpV.EQ && e2 == Bln.FALSE ||
+    } else if(e1.seqType().eq(SeqType.BLN) && (op == OpV.EQ && e2 == Bln.FALSE ||
         op == OpV.NE && e2 == Bln.TRUE)) {
       // (A eq false()) -> not(A)
       e = Function.NOT.get(null, info, e1);
@@ -206,7 +204,7 @@ public final class CmpV extends Cmp {
     // checking one direction is sufficient, as operators may have been swapped
     return (op == OpV.EQ && expr[1] == Bln.TRUE ||
             op == OpV.NE && expr[1] == Bln.FALSE) &&
-      expr[0].type().eq(SeqType.BLN) ? expr[0] : this;
+      expr[0].seqType().eq(SeqType.BLN) ? expr[0] : this;
   }
 
   @Override

@@ -122,7 +122,7 @@ public final class And extends Logical {
   public void markTailCalls(final QueryContext ctx) {
     // if the last expression surely returns a boolean, we can jump to it
     final Expr last = expr[expr.length - 1];
-    if(last.type().eq(SeqType.BLN)) last.markTailCalls(ctx);
+    if(last.type().seqType().eq(SeqType.BLN)) last.markTailCalls(ctx);
   }
 
   @Override
