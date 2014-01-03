@@ -111,6 +111,7 @@ public abstract class ParseExpr extends Expr {
     return type == null ? SeqType.ITEM_ZM : type.seqType();
   }
 
+  @Deprecated
   @Override
   public final long size() {
     return type().size();

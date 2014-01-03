@@ -107,22 +107,22 @@ public final class Var extends ExprInfo {
    */
   public void refineType(final ExtSeqType t, final QueryContext ctx, final InputInfo ii)
       throws QueryException {
-
     if(t == null) return;
+
     if(declType != null) {
       if(declType.occ.intersect(t.occ()) == null) throw INVCAST.get(ii, t, declType);
       if(!t.seqType().convertibleTo(declType)) return;
+
+      if(t.seqType().instanceOf(declType)) {
+        ctx.compInfo(QueryText.OPTCAST, this);
+        declType = null;
+      }
     }
 
     if(!inType.eq(t) && !inType.instanceOf(t)) {
+      // try to infer a more specific type
       final ExtSeqType is = inType.intersect(t);
-      if(is != null) {
-        inType = is;
-        if(declType != null && inType.seqType().instanceOf(declType)) {
-          ctx.compInfo(QueryText.OPTCAST, this);
-          declType = null;
-        }
-      }
+      if(is != null) inType = is;
     }
   }
 

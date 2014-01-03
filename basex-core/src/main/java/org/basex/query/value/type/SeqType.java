@@ -522,7 +522,9 @@ public final class SeqType {
    * @return resulting type
    */
   public SeqType union(final SeqType t) {
-    return get(type == t.type ? type : type.union(t.type), occ.union(t.occ));
+    final Type tp = type == t.type ? type :
+      this == EMP ? t.type : t == EMP ? type : type.union(t.type);
+    return get(tp, occ.union(t.occ));
   }
 
   /**
@@ -534,8 +536,9 @@ public final class SeqType {
   public SeqType intersect(final SeqType t) {
     final Occ o = occ.intersect(t.occ);
     if(o == null) return null;
-    final Type tp = type.intersect(t.type);
+    final Type tp = this == EMP ? t.type : t == EMP ? type : type.intersect(t.type);
     if(tp == null) return null;
+
     if(kind == null || t.kind == null || kind.sameAs(t.kind))
       return get(tp, o, kind != null ? kind : t.kind);
     final Test k = kind.intersect(t.kind);

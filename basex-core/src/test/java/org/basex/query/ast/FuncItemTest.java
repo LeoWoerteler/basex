@@ -43,7 +43,7 @@ public final class FuncItemTest extends QueryPlanTest {
   /** Checks if a partial application with non-empty closure is left alone. */
   @Test
   public void partApp2Test() {
-    check("for $sub in ('foo', 'bar')" +
+    check("for $sub in (('foo', 'bar') ! .)" +
         "return starts-with(?, $sub)('foobar')",
         "true false",
         "exists(//" + Util.className(PartFunc.class) + ')'

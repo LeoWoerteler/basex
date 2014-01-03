@@ -27,6 +27,11 @@ public final class InterSect extends Set {
   @Override
   public Expr compile(final QueryContext ctx, final VarScope scp) throws QueryException {
     super.compile(ctx, scp);
+    return optimize(ctx, scp);
+  }
+
+  @Override
+  public Expr optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
     return oneIsEmpty() ? optPre(null, ctx) : this;
   }
 

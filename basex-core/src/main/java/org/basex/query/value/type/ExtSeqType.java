@@ -45,7 +45,7 @@ public final class ExtSeqType {
   }
 
   public static ExtSeqType get(final SeqType type) {
-    return get(type, type.occ.min, type.occ.max == Long.MAX_VALUE ? -1 : type.occ.max);
+    return get(type, type.occ.min, type.occ.max == Integer.MAX_VALUE ? -1 : type.occ.max);
   }
 
   public static ExtSeqType get(final SeqType type, final long min, final long max) {
@@ -62,10 +62,12 @@ public final class ExtSeqType {
    * @return the resulting sequence type
    */
   public ExtSeqType plus(final ExtSeqType other) {
+    if(this == EMP) return other;
+    if(other == EMP) return this;
     final SeqType type = seqType.union(other.seqType);
     final long min = minSize + other.minSize;
     final long max = maxSize < 0 || other.maxSize < 0 ? -1 : maxSize + other.maxSize;
-    return new ExtSeqType(type, min, max);
+    return get(type, min, max);
   }
 
   /**
@@ -76,10 +78,11 @@ public final class ExtSeqType {
    * @return the resulting sequence type
    */
   public ExtSeqType or(final ExtSeqType other) {
-    final SeqType type = seqType.union(other.seqType);
+    final SeqType type = this == EMP ? other.seqType : other == EMP ? seqType :
+      seqType.union(other.seqType);
     final long min = Math.min(minSize, other.minSize);
     final long max = maxSize < 0  || other.maxSize < 0 ? -1 : Math.max(maxSize, other.maxSize);
-    return new ExtSeqType(type, min, max);
+    return get(type, min, max);
   }
 
   /**
@@ -126,19 +129,20 @@ public final class ExtSeqType {
       final Occ occ = size == 0 ? Occ.ZERO : size == 1 ? Occ.ONE : Occ.ONE_MORE;
       return new ExtSeqType(seqType.withOcc(occ), size, size);
     }
-    return minSize == 0 && maxSize == -1 ? this : new ExtSeqType(seqType.withOcc(Occ.ZERO_MORE));
+    return minSize == 0 && maxSize == -1 ? this :
+      new ExtSeqType(seqType.withOcc(Occ.ZERO_MORE));
   }
 
-  public ExtSeqType withMinSize(final int min) {
-    if(min == minSize) return this;
-    final long max = maxSize >= 0 ? Math.max(maxSize, min) : -1;
-    return new ExtSeqType(seqType.withOcc(occ(min, maxSize)), min, max);
+  public ExtSeqType withMinSize(final long l) {
+    if(l == minSize) return this;
+    final long max = maxSize >= 0 ? Math.max(maxSize, l) : -1;
+    return get(seqType.withOcc(occ(l, maxSize)), l, max);
   }
 
   public ExtSeqType withMaxSize(final long max) {
     if(max == maxSize) return this;
     final long min = max < 0 ? minSize : Math.min(minSize, max);
-    return new ExtSeqType(seqType.withOcc(occ(min, max)), min, max);
+    return get(seqType.withOcc(occ(min, max)), min, max);
   }
 
   public boolean nonEmpty() {
@@ -159,7 +163,7 @@ public final class ExtSeqType {
 
   public ExtSeqType withSize(final long min, final long max) {
     return min == minSize && max == maxSize ? this :
-      new ExtSeqType(seqType.withOcc(occ(min, max)), min, max);
+      get(seqType.withOcc(occ(min, max)), min, max);
   }
 
   @Override
@@ -175,7 +179,7 @@ public final class ExtSeqType {
   public ExtSeqType union(final ExtSeqType other) {
     final long min = Math.min(minSize, other.minSize),
         max = maxSize >= 0 && other.maxSize >= 0 ? Math.max(maxSize, other.maxSize) : -1;
-    return new ExtSeqType(seqType.union(other.seqType), min, max);
+    return get(seqType.union(other.seqType), min, max);
   }
 
   public boolean eq(final ExtSeqType t) {
@@ -187,6 +191,21 @@ public final class ExtSeqType {
     if(st == null) return null;
     final long min = Math.max(minSize, t.minSize),
         max = maxSize < 0 ? t.maxSize : t.maxSize < 0 ? maxSize : Math.min(maxSize, t.maxSize);
-    return max >= 0 && min > max ? null : new ExtSeqType(st, min, max);
+    return max >= 0 && min > max ? null : get(st, min, max);
+  }
+
+  public ExtSeqType subSeq(final long start) {
+    if(this == EMP || start < 2 || minSize == 0 && maxSize == -1) return this;
+    if(maxSize >= 0 && start > maxSize) return EMP;
+    final long min = Math.max(minSize - start + 1, 0);
+    final long max = maxSize == -1 ? -1 : Math.max(maxSize - start + 1, 0);
+    return get(seqType, min, max);
+  }
+
+  public ExtSeqType subSeq(final long start, final long length) {
+    if(length <= 0 || maxSize >= 0 && start > maxSize) return EMP;
+    final long min = Math.min(Math.max(minSize - start + 1, 0), length);
+    final long max = maxSize == -1 ? length : Math.min(Math.max(maxSize - start + 1, 0), length);
+    return min == minSize && max == maxSize ? this : get(seqType, min, max);
   }
 }

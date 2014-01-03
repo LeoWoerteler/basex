@@ -110,8 +110,17 @@ public class Str extends AStr {
     final ByteList tb = new ByteList();
     tb.add('"');
     for(final byte v : val) {
-      if(v == '&') tb.add(E_AMP);
-      else tb.add(v);
+      if(0 <= v && v < 32) {
+        tb.add('&').add('#').add('x');
+        final int high = v >> 4 & 0x0F;
+        tb.add(high < 10 ? '0' + high : 'A' + (high - 10));
+        final int low = v & 0x0F;
+        tb.add(low < 10 ? '0' + low : 'A' + (low - 10)).add(';');
+      } else if(v == '&') {
+        tb.add(E_AMP);
+      } else {
+        tb.add(v);
+      }
       if(v == '"') tb.add('"');
     }
     return tb.add('"').toString();

@@ -5,7 +5,6 @@ import static org.basex.query.util.Err.*;
 import org.basex.query.*;
 import org.basex.query.value.item.*;
 import org.basex.query.value.type.*;
-import org.basex.query.value.type.SeqType.*;
 import org.basex.util.*;
 
 /**
@@ -37,12 +36,7 @@ public abstract class NativeSeq extends Seq {
   }
 
   @Override
-  public final boolean homogeneous() {
-    return true;
-  }
-
-  @Override
   public final ExtSeqType type() {
-    return ExtSeqType.get(SeqType.get(type, Occ.ONE_MORE), size, size);
+    return ExtSeqType.get(type.seqType(), size, size);
   }
 }

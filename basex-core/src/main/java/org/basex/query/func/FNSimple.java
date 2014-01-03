@@ -109,7 +109,7 @@ public final class FNSimple extends StandardFunc {
   }
 
   @Override
-  protected Expr opt(final QueryContext ctx, final VarScope scp) {
+  protected Expr opt(final QueryContext ctx, final VarScope scp) throws QueryException {
     if(expr.length == 0) return this;
     final Expr e = expr[0];
 
@@ -117,8 +117,8 @@ public final class FNSimple extends StandardFunc {
       case EMPTY:
       case EXISTS:
         // ignore non-deterministic expressions (e.g.: error())
-        return e.size() == -1 || e.has(Flag.NDT) || e.has(Flag.CNS) ? this :
-          Bln.get(sig == Function.EMPTY ^ !e.isEmpty());
+        return e.size() == -1 || e.has(Flag.NDT) || e.has(Flag.UPD) || e.has(Flag.CNS) ? this :
+          Bln.get(sig == Function.EMPTY ^ e.size() > 0);
       case BOOLEAN:
         // simplify, e.g.: if(boolean(A)) -> if(A)
         return e.seqType().eq(SeqType.BLN) ? e : this;
@@ -153,7 +153,7 @@ public final class FNSimple extends StandardFunc {
         return e.type().size() == 1 ? e : this;
       case ONE_OR_MORE:
         type = e.type().withMinSize(1);
-        return e.type().minSize() == 0 ? this : e;
+        return e.type().minSize() > 0 ? e : this;
       case UNORDERED:
         return e;
       default:

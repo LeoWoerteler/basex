@@ -76,7 +76,18 @@ public final class FNAggr extends StandardFunc {
         final Type a = e.seqType().type, b = expr.length == 2 ? expr[1].seqType().type : a;
         if(a.isNumberOrUntyped() && b.isNumberOrUntyped()) {
           type = ExtSeqType.get(Calc.type(a, b).seqType());
+        } else {
+          type = ExtSeqType.get(AtomType.NUM.seqType());
         }
+        break;
+      case MIN:
+      case MAX:
+        final ExtSeqType etp = e.type();
+        final SeqType tp = etp.seqType();
+        final Type t = tp.type;
+        final long min = Math.min(tp.occ.min, 1);
+        type = t.isUntyped() ? ExtSeqType.get(SeqType.DBL, min, 1) :
+          ExtSeqType.get(t.isNumber() ? tp : AtomType.NUM.seqType(), min, 1);
         break;
       default:
         break;

@@ -153,4 +153,11 @@ public final class TypeSwitch extends ParseExpr {
     for(final Expr e : cases) sz += e.exprSize();
     return sz + ts.exprSize();
   }
+
+  @Override
+  protected Expr typeCheck(final TypeCheck tc, final QueryContext ctx, final VarScope scp)
+      throws QueryException {
+    for(final TypeCase cs : cases) cs.typeCheck(tc, ctx, scp);
+    return this;
+  }
 }

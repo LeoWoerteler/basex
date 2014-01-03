@@ -50,6 +50,11 @@ public final class BlnSeq extends NativeSeq {
     return get(tmp);
   }
 
+  @Override
+  public boolean homogeneous() {
+    return true;
+  }
+
   // STATIC METHODS =====================================================================
 
   /**

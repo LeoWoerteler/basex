@@ -50,7 +50,11 @@ public final class Switch extends ParseExpr {
   public Expr compile(final QueryContext ctx, final VarScope scp) throws QueryException {
     cond = cond.compile(ctx, scp);
     for(final SwitchCase sc : cases) sc.compile(ctx, scp);
+    return optimize(ctx, scp);
+  }
 
+  @Override
+  public Expr optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
     // check if expression can be pre-evaluated
     Expr ex = this;
     if(cond.isValue()) {
@@ -134,6 +138,13 @@ public final class Switch extends ParseExpr {
       cond = cn;
     }
     return change ? optimize(ctx, scp) : null;
+  }
+
+  @Override
+  protected Expr typeCheck(final TypeCheck tc, final QueryContext ctx, final VarScope scp)
+      throws QueryException {
+    for(final SwitchCase cs : cases) cs.typeCheck(tc, ctx, scp);
+    return this;
   }
 
   /**

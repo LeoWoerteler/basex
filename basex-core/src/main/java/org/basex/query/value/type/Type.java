@@ -85,7 +85,8 @@ public interface Type {
     /** xs:anyURI.                */ URI(81),
     /** xs:QName.                 */ QNM(82),
     /** xs:NOTATION.              */ NOT(83),
-    /** java().                   */ JAVA(86);
+    /** java().                   */ JAVA(86),
+    /** numeric().                */ NUM(87);
 
     /** Cached enums (faster). */
     public static final ID[] VALUES = values();

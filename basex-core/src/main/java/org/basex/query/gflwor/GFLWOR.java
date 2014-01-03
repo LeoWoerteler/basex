@@ -2,8 +2,10 @@ package org.basex.query.gflwor;
 
 import java.util.*;
 
+import org.basex.core.*;
 import org.basex.query.*;
 import org.basex.query.expr.*;
+import org.basex.query.expr.List;
 import org.basex.query.func.*;
 import org.basex.query.iter.*;
 import org.basex.query.path.*;
@@ -139,12 +141,49 @@ public final class GFLWOR extends ParseExpr {
         return ret;
       }
 
-      if(clauses.getLast() instanceof For && ret instanceof VarRef) {
+      if(clauses.getLast() instanceof For) {
         final For last = (For) clauses.getLast();
-        // for $x in E return $x  ==>  return E
-        if(!last.var.checksType() && last.var.is(((VarRef) ret).var)) {
+        if(ret instanceof VarRef && !last.var.checksType() && last.var.is(((VarRef) ret).var)) {
+          // for $x in E return $x  ==>  return E
           clauses.removeLast();
           ret = last.expr;
+          changed = true;
+        } else if(last.expr.isValue() && !last.empty && last.expr.size() < 10
+            // unroll small loops
+            && ret.exprSize() < ctx.context.options.get(MainOptions.INLINELIMIT)) {
+          final Value val = last.expr.value(ctx);
+          final int n = (int) val.size();
+          final ExprList unrolled = new ExprList(n);
+          QueryException ex = null;
+          for(int i = 0; i < n; i++) {
+            final Item it = val.itemAt(i);
+            Expr rt = ret.copy(ctx, scp);
+            try {
+              final Expr inl = rt.inline(ctx, scp, last.var,
+                  last.var.checked(it, ctx, scp, last.info));
+              if(inl != null) rt = inl;
+              if(last.pos != null) {
+                final Expr posInl = rt.inline(ctx, scp, last.pos, Int.get(i + 1));
+                if(posInl != null) rt = posInl;
+              }
+              if(last.score != null) {
+                final Expr scrInl = rt.inline(ctx, scp, last.score, Dbl.get(it.score()));
+                if(scrInl != null) rt = scrInl;
+              }
+              unrolled.add(rt);
+            } catch(final QueryException qe) {
+              if(i == 0) {
+                // an error on first execution is unavoidable
+                ex = qe;
+                break;
+              }
+              // error can be avoided if the FLWOR expression is only partially evaluated
+              unrolled.add(FNInfo.error(qe, ret.type()));
+            }
+          }
+          clauses.removeLast();
+          if(ex != null) clauseError(ex, clauses.size());
+          else ret = new List(last.info, unrolled.finish()).optimize(ctx, scp);
           changed = true;
         }
       }
@@ -203,12 +242,6 @@ public final class GFLWOR extends ParseExpr {
           }
         }
       }
-
-      /*
-       * [LW] not safe:
-       * for $x in 1 to 4 return
-       *   for $y in 1 to 4 count $index return $index
-       * */
     } while(changed);
 
     mergeWheres();
@@ -588,7 +621,8 @@ public final class GFLWOR extends ParseExpr {
           iter.set(c);
         }
       } catch(final QueryException qe) {
-        return clauseError(qe, iter.previousIndex() + 1);
+        clauseError(qe, iter.previousIndex() + 1);
+        return true;
       }
     }
 
@@ -599,7 +633,8 @@ public final class GFLWOR extends ParseExpr {
         ret = rt;
       }
     } catch(final QueryException qe) {
-      return clauseError(qe, clauses.size());
+      clauseError(qe, clauses.size());
+      return true;
     }
 
     return change;
@@ -609,10 +644,9 @@ public final class GFLWOR extends ParseExpr {
    * Tries to recover from a compile-time exception inside a FLWOR clause.
    * @param qe thrown exception
    * @param idx index of the throwing clause, size of {@link #clauses} for return clause
-   * @return {@code true} if the GFLWOR expression has to stay
    * @throws QueryException query exception if the whole expression fails
    */
-  private boolean clauseError(final QueryException qe, final int idx) throws QueryException {
+  private void clauseError(final QueryException qe, final int idx) throws QueryException {
     final ListIterator<Clause> iter = clauses.listIterator(idx);
     while(iter.hasPrevious()) {
       final Clause b4 = iter.previous();
@@ -623,7 +657,7 @@ public final class GFLWOR extends ParseExpr {
           iter.remove();
         }
         ret = FNInfo.error(qe, ret.type());
-        return true;
+        return;
       }
     }
     throw qe;
@@ -693,9 +727,30 @@ public final class GFLWOR extends ParseExpr {
   @Override
   public Expr typeCheck(final TypeCheck tc, final QueryContext ctx, final VarScope scp)
       throws QueryException {
-    if(tc.check.occ != Occ.ZERO_MORE) return null;
-    ret = tc.check(ret, ctx, scp);
-    return optimize(ctx, scp);
+    final SeqType seqType = type.seqType();
+    if(seqType.instanceOf(tc.check)) return this;
+
+    long[] tuples = { 1, 1 };
+    for(final Clause c : clauses) c.calcSize(tuples);
+
+    if(tuples[1] == 1 && (tuples[0] == 1 || tc.check.mayBeZero())) {
+      // return clause is evaluated exactly once
+      ret = tc.check(ret, ctx, scp);
+      return optimize(ctx, scp);
+    }
+
+    if(seqType.occ.instanceOf(tc.check.occ)) {
+      try {
+        ret = new TypeCheck(tc.sc, info, ret, tc.check.withOcc(Occ.ZERO_MORE),
+            tc.promote).optimize(ctx, scp);
+      } catch(final QueryException qe) {
+        clauseError(qe, clauses.size());
+      }
+      return optimize(ctx, scp);
+    }
+
+    // type must be checked from the outside
+    return null;
   }
 
   /**

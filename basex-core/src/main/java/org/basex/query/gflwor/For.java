@@ -225,20 +225,16 @@ public final class For extends Clause {
    */
   boolean toPred(final QueryContext ctx, final VarScope scp, final Expr p)
       throws QueryException {
-    if(empty || !(vars.length == 1 && p.uses(var) && p.removable(var))) return false;
+    if(empty || !(vars.length == 1 && p.uses(var) && p.removable(var))
+        || !(expr instanceof AxisPath || expr instanceof Filter)) return false;
     final Expr r = p.inline(ctx, scp, var, new Context(info)), e = r == null ? p : r;
 
     // attach predicates to axis path or filter, or create a new filter
     final Expr a = e.seqType().mayBeNumber() ? Function.BOOLEAN.get(null, info, e) : e;
 
     // add to clause expression
-    if(expr instanceof AxisPath) {
-      expr = ((Path) expr).addPreds(ctx, scp, a);
-    } else if(expr instanceof Filter) {
-      expr = ((Filter) expr).addPred(ctx, scp, a);
-    } else {
-      expr = Filter.get(info, expr, a).optimize(ctx, scp);
-    }
+    if(expr instanceof AxisPath) expr = ((Path) expr).addPreds(ctx, scp, a);
+    else expr = ((Filter) expr).addPred(ctx, scp, a);
 
     return true;
   }

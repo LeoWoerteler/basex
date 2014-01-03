@@ -8,6 +8,7 @@ import org.basex.query.util.*;
 import org.basex.query.value.item.*;
 import org.basex.query.value.node.*;
 import org.basex.query.value.seq.*;
+import org.basex.query.value.type.*;
 import org.basex.query.var.*;
 import org.basex.util.*;
 import org.basex.util.hash.*;
@@ -31,15 +32,21 @@ public final class Union extends Set {
   @Override
   public Expr compile(final QueryContext ctx, final VarScope scp) throws QueryException {
     super.compile(ctx, scp);
+    return optimize(ctx, scp);
+  }
 
+  @Override
+  public Expr optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
     final int es = expr.length;
     final ExprList el = new ExprList(es);
+    ExtSeqType tp = null;
     for(final Expr ex : expr) {
       if(ex.isEmpty()) {
         // remove empty operands
         ctx.compInfo(OPTREMOVE, this, ex);
       } else {
         el.add(ex);
+        tp = tp == null ? ex.type() : tp.plus(ex.type());
       }
     }
     // no expressions: return empty sequence
@@ -48,6 +55,13 @@ public final class Union extends Set {
     if(el.size() == 1 && iterable) return el.get(0);
     // replace expressions with optimized list
     if(el.size() != es) expr = el.finish();
+
+    if(!tp.seqType().instanceOf(SeqType.NOD_ZM)) {
+      final ExtSeqType tp2 = tp.intersect(ExtSeqType.get(SeqType.NOD_ZM));
+      if(tp2 != null) tp = tp2;
+    }
+    type = tp.withMinSize(Math.min(tp.minSize(), 1));
+
     return this;
   }
 

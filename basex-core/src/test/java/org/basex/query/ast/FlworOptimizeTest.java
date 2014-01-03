@@ -15,11 +15,11 @@ public final class FlworOptimizeTest extends QueryPlanTest {
   /** Tests the relocation of a static let clause. */
   @Test public void moveTop() {
     check("let $b := <x>a</x> " +
-        "for $i in 1 to 2 " +
+        "for $i in 1 to 10 " +
         "let $m := $b " +
         "return $m/text()",
 
-        "aa",
+        "aaaaaaaaaa",
         Util.info("every $l in //% satisfies $l << //%", Let.class, For.class)
     );
   }
@@ -65,11 +65,12 @@ public final class FlworOptimizeTest extends QueryPlanTest {
   /** Tests the relocation of a static let clause. */
   @Test public void moveFor() {
     check("let $x := <x/> " +
-        "for $a in 1 to 2 " +
+        "for $a in 1 to 10 " +
         "for $b as element(x) in $x " +
         "return ($b, $b)[1]",
 
-        "<x/>" + Prop.NL + "<x/>",
+        "<x/>" + Prop.NL + "<x/>" + Prop.NL + "<x/>" + Prop.NL + "<x/>" + Prop.NL + "<x/>" + Prop.NL
+          + "<x/>" + Prop.NL + "<x/>" + Prop.NL + "<x/>" + Prop.NL + "<x/>" + Prop.NL + "<x/>",
         "//(For | Let)[Var/@name='$b'] << //For[Var/@name='$a']",
         "every $let in //Let, $for in //For satisfies $let << $for"
     );
@@ -149,11 +150,11 @@ public final class FlworOptimizeTest extends QueryPlanTest {
 
   /** Tests if multiple let clauses are all moved to their optimal position. */
   @Test public void slideMultipleLets() {
-    check("for $i in 1 to 2 for $j in 1 to 2 " +
+    check("for $i in 1 to 2 for $j in 1 to 10 " +
         "let $a as xs:integer := 3 * $i, " +
         "    $b as xs:integer := 2 * $i " +
         "return $a * $a + $b * $b",
-        "13 13 52 52",
+        "13 13 13 13 13 13 13 13 13 13 52 52 52 52 52 52 52 52 52 52",
         "exists(//For[every $let in //Let satisfies . << $let])",
         "exists(//For[every $let in //Let satisfies . >> $let])",
         "//Let[Var/@name='$a'] << //Let[Var/@name='$b']"
@@ -191,8 +192,8 @@ public final class FlworOptimizeTest extends QueryPlanTest {
         "exists(//If) and empty(//GFLWOR)"
     );
 
-    check("(1 to 3) ! (for $j at $p in 1 to 5 where . eq 1 return $j * $p)",
-        "1 4 9 16 25",
+    check("(1 to 3) ! (for $j at $p in 1 to 10 where . eq 1 return $j * $p)",
+        "1 4 9 16 25 36 49 64 81 100",
         "exists(//If) and exists(//GFLWOR)"
     );
 
@@ -234,7 +235,7 @@ public final class FlworOptimizeTest extends QueryPlanTest {
         "exists(//GFLWOR) and exists(//Insert)"
     );
 
-    check("for $i in 1 to 3 let $x := $i * $i return error()",
+    check("for $i in 1 to 100 let $x := $i * $i return error()",
         null,
         "exists(//GFLWOR)"
     );

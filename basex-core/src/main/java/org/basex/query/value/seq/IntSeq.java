@@ -70,6 +70,11 @@ public final class IntSeq extends NativeSeq {
     return get(tmp, type);
   }
 
+  @Override
+  public boolean homogeneous() {
+    return true;
+  }
+
   // STATIC METHODS =====================================================================
 
   /**

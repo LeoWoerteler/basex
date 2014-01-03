@@ -31,7 +31,7 @@ public final class Arith extends Arr {
   public Arith(final InputInfo ii, final Expr e1, final Expr e2, final Calc c) {
     super(ii, e1, e2);
     calc = c;
-    type = ExtSeqType.get(SeqType.ITEM_ZO);
+    type = ExtSeqType.get(AtomType.NUM.seqType(), 0, 1);
   }
 
   @Override
@@ -50,7 +50,7 @@ public final class Arith extends Arr {
       final Occ occ = s0.one() && s1.one() ? Occ.ONE : Occ.ZERO_ONE;
       type = ExtSeqType.get(SeqType.get(Calc.type(t0, t1), occ));
     } else if(s0.one() && s1.one()) {
-      type = ExtSeqType.get(SeqType.ITEM);
+      type = ExtSeqType.get(AtomType.NUM.seqType());
     }
     return optPre(oneIsEmpty() ? null : allAreValues() ? item(ctx, info) : this, ctx);
   }

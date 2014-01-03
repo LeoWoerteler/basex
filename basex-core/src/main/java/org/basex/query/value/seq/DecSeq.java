@@ -51,6 +51,11 @@ public final class DecSeq extends NativeSeq {
     return get(tmp);
   }
 
+  @Override
+  public boolean homogeneous() {
+    return true;
+  }
+
   // STATIC METHODS =====================================================================
 
   /**

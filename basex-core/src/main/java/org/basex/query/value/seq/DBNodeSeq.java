@@ -73,6 +73,11 @@ public final class DBNodeSeq extends NativeSeq {
     return get(tmp, data, type, false);
   }
 
+  @Override
+  public boolean homogeneous() {
+    return false;
+  }
+
   // STATIC METHODS =====================================================================
 
   /**

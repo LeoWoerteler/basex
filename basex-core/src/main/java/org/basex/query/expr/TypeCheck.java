@@ -22,7 +22,7 @@ public final class TypeCheck extends Single {
   /** Flag for function conversion. */
   public final boolean promote;
   /** Static context. */
-  private final StaticContext sc;
+  public final StaticContext sc;
   /** Type to check. */
   public final SeqType check;
 

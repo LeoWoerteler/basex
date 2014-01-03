@@ -71,6 +71,20 @@ public final class SwitchCase extends Arr {
   }
 
   @Override
+  protected Expr typeCheck(final TypeCheck tc, final QueryContext ctx, final VarScope scp)
+      throws QueryException {
+    for(int e = 0; e < expr.length; e++) {
+      try {
+        expr[e] = tc.check(expr[e], ctx, scp);
+      } catch(final QueryException ex) {
+        // replace original expression with error
+        expr[e] = FNInfo.error(ex, expr[e].type());
+      }
+    }
+    return this;
+  }
+
+  @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder();
     final int es = expr.length;

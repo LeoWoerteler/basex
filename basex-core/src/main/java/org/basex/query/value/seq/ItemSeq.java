@@ -20,7 +20,9 @@ public final class ItemSeq extends Seq {
   /** Item array. */
   private final Item[] item;
   /** Item Types. */
-  private Type ret;
+  private boolean homogeneous;
+  /** Extended sequence type. */
+  private ExtSeqType seqType;
 
   /**
    * Constructor.
@@ -40,7 +42,8 @@ public final class ItemSeq extends Seq {
    */
   ItemSeq(final Item[] it, final int s, final Type t) {
     this(it, s);
-    ret = t;
+    seqType = t == null ? null : ExtSeqType.get(t.seqType(), s, s);
+    homogeneous = t != null && t != AtomType.ITEM;
   }
 
   @Override
@@ -51,18 +54,17 @@ public final class ItemSeq extends Seq {
 
   @Override
   public ExtSeqType type() {
-    if(ret == null) {
-      Type t = item[0].type;
+    if(seqType == null) {
+      final Type fst = item[0].type;
+      SeqType st = item[0].seqType();
       for(int s = 1; s < size; s++) {
-        if(t != item[s].type) {
-          t = AtomType.ITEM;
-          break;
-        }
+        st = st.union(item[s].seqType());
+        homogeneous &= item[s].type == fst;
       }
-      ret = t;
-      type = t;
+      type = st.type;
+      seqType = ExtSeqType.get(st, size, size);
     }
-    return ExtSeqType.get(type.seqType(), size, size);
+    return seqType;
   }
 
   @Override
@@ -90,7 +92,7 @@ public final class ItemSeq extends Seq {
 
   @Override
   public boolean homogeneous() {
-    return ret != null && ret != AtomType.ITEM;
+    return homogeneous;
   }
 
   @Override

@@ -78,6 +78,17 @@ public final class TypeCase extends Single {
   }
 
   @Override
+  protected Expr typeCheck(final TypeCheck tc, final QueryContext ctx, final VarScope scp)
+      throws QueryException {
+    try {
+      expr = tc.check(expr, ctx, scp);
+    } catch(final QueryException qe) {
+      expr = FNInfo.error(qe, expr.type());
+    }
+    return this;
+  }
+
+  @Override
   public TypeCase copy(final QueryContext ctx, final VarScope scp,
       final IntObjMap<Var> vs) {
     final Var v = var == null ? null : scp.newCopyOf(ctx, var);

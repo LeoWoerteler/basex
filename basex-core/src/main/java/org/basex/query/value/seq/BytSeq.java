@@ -49,6 +49,11 @@ public final class BytSeq extends NativeSeq {
     return get(tmp);
   }
 
+  @Override
+  public boolean homogeneous() {
+    return true;
+  }
+
   // STATIC METHODS =====================================================================
 
   /**

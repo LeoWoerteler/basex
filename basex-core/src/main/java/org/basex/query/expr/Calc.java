@@ -244,6 +244,7 @@ public enum Calc {
    */
   public static Type type(final Type a, final Type b) {
     if(a == DBL || b == DBL || a.isUntyped() || b.isUntyped()) return DBL;
+    if(a == NUM || b == NUM) return NUM;
     if(a == FLT || b == FLT) return FLT;
     if(a == DEC || b == DEC) return DEC;
     return ITR;

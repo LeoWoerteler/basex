@@ -30,7 +30,11 @@ public final class Except extends Set {
   @Override
   public Expr compile(final QueryContext ctx, final VarScope scp) throws QueryException {
     super.compile(ctx, scp);
+    return optimize(ctx, scp);
+  }
 
+  @Override
+  public Expr optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
     final int es = expr.length;
     final ExprList el = new ExprList(es);
     for(final Expr ex : expr) {

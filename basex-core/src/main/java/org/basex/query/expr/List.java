@@ -78,7 +78,7 @@ public final class List extends Arr {
         for(final Expr e : expr) {
           final Value v = e.value(ctx);
           if(c == 0) all = v.type;
-          else if(all != v.type) all = null;
+          else if(all != v.type || !v.homogeneous()) all = null;
           vs[c++] = v;
         }
 

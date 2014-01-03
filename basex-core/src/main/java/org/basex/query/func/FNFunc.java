@@ -86,7 +86,67 @@ public final class FNFunc extends StandardFunc {
       return e;
     }
 
+    // iteration over the empty sequence
+    if(oneOf(sig, Function.FOR_EACH, Function.FOR_EACH_PAIR, Function.FILTER)
+        && expr[0].isEmpty() && !(has(Flag.NDT) || has(Flag.UPD))) {
+      return Empty.SEQ;
+    }
+
+    final ExtSeqType st = expr.length < 1 ? null : expr[0].type();
+    switch(sig) {
+      case FOR_EACH:
+        final ExtSeqType ret = retType(expr[1]);
+        type = ret.withSize(st.minSize() * ret.minSize(),
+            st.isBounded() && ret.isBounded() ? st.maxSize() * ret.maxSize() : -1);
+        break;
+      case FILTER:
+        type = st.withMinSize(0);
+        break;
+      case FOR_EACH_PAIR:
+        if(!expr[1].isEmpty()) {
+          final ExtSeqType st2 = expr[1].type();
+          final ExtSeqType rt = retType(expr[2]);
+          final long maxIter = st.isBounded()
+              ? (st2.isBounded() ? Math.min(st.maxSize(), st2.maxSize()) : st.maxSize())
+              : (st2.isBounded() ? st2.maxSize() : -1);
+          type = rt.withSize(rt.minSize() * Math.min(st.minSize(), st2.minSize()),
+              rt.isBounded() && maxIter >= 0 ? maxIter * rt.maxSize() : -1);
+        } else if(!(has(Flag.NDT) || has(Flag.UPD))) {
+          return Empty.SEQ;
+        } else {
+          type = ExtSeqType.EMP;
+        }
+        break;
+      case FOLD_LEFT:
+      case FOLD_RIGHT:
+        if(expr[0].size() == 0) {
+          if(!(has(Flag.NDT) || has(Flag.UPD))) return expr[1];
+          type = expr[1].type();
+        } else {
+          final ExtSeqType rt = retType(expr[2]);
+          type = st.minSize() > 0 ? rt : expr[1].type().union(rt);
+        }
+        break;
+      default:
+        break;
+    }
+
     return this;
+  }
+
+  /**
+   * Gets the return type of the function item produced by the given expression.
+   * @param e expression producing the function item
+   * @return the return type
+   */
+  private static ExtSeqType retType(final Expr e) {
+    if(e instanceof XQFunction) return ((XQFunction) e).returnType();
+    final SeqType st = e.seqType();
+    if(st.type instanceof FuncType) {
+      final SeqType ret = ((FuncType) st.type).ret;
+      if(ret != null) return ExtSeqType.get(ret);
+    }
+    return ExtSeqType.ANY;
   }
 
   /**

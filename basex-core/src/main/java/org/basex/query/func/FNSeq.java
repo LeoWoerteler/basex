@@ -16,7 +16,6 @@ import org.basex.query.value.item.*;
 import org.basex.query.value.node.*;
 import org.basex.query.value.seq.*;
 import org.basex.query.value.type.*;
-import org.basex.query.value.type.SeqType.Occ;
 import org.basex.query.var.*;
 import org.basex.util.*;
 
@@ -143,29 +142,75 @@ public final class FNSeq extends StandardFunc {
 
   @Override
   protected Expr opt(final QueryContext ctx, final VarScope scp) throws QueryException {
-    // static typing:
-    // index-of will create integers, insert-before might add new types
-    if(sig == Function.INDEX_OF || sig == Function.INSERT_BEFORE) return this;
-
-    // pre-evaluate distinct values
-    final ExtSeqType st = expr[0].type();
+    final Expr seq = expr[0];
+    final ExtSeqType st = seq.type();
     final Type t = st.seqType().type;
-    if(sig == Function.DISTINCT_VALUES && expr.length == 1) {
-      type = t.isNode() ? ExtSeqType.get(AtomType.ATM.seqType(), st.minSize(),
-          st.isBounded() ? st.maxSize() : -1) : st;
-      return cmpDist(ctx);
+    switch(sig) {
+      case INDEX_OF:
+      case INSERT_BEFORE:
+        // static typing:
+        // index-of will create integers, insert-before might add new types
+        return this;
+      case HEAD:
+        type = st.subSeq(1, 1);
+        return this;
+      case DISTINCT_VALUES:
+        type = ExtSeqType.get(
+            t.isNode() ? AtomType.ATM.seqType() : st.seqType(),
+            Math.min(st.minSize(), 1),
+            st.isBounded() ? st.maxSize() : -1);
+        return expr.length == 1 ? cmpDist(ctx) : this;
+      case REVERSE:
+        type = st;
+        return this;
+      case REMOVE:
+        if(expr[1] instanceof Int) {
+          final long pos = ((Int) expr[1]).itr();
+          if(pos < 1 || st.isBounded() && pos > st.maxSize()) {
+            // nothing will ever be deleted
+            return expr[0];
+          } else if(pos <= st.minSize()) {
+            type = st.withSize(Math.max(0, st.minSize() - 1),
+                st.isBounded() ? Math.max(0, st.maxSize() - 1) : -1);
+            return this;
+          }
+        }
+        type = st.withSize(Math.max(0, st.minSize() - 1),
+            st.isBounded() ? st.maxSize() : -1);
+        return this;
+      case SUBSEQUENCE:
+        if(expr[1] instanceof Int) {
+          final long start = ((Int) expr[1]).itr();
+          if(expr.length == 3) {
+            if(expr[2] instanceof Int) {
+              final long len = ((Int) expr[2]).itr();
+              type = st.subSeq(start, len);
+            } else {
+              type = st.subSeq(Math.max(start, 1));
+            }
+          } else {
+            type = st.subSeq(Math.max(start, 1));
+          }
+          if(type.maxSize() == 0 && !(has(Flag.NDT) || has(Flag.UPD))) return Empty.SEQ;
+        } else if(expr.length > 2 && expr[2] instanceof Int) {
+          final long len = ((Int) expr[2]).itr();
+          if(len <= 0 && !(has(Flag.NDT) || has(Flag.UPD))) return Empty.SEQ;
+          type = st.withSize(Math.min(st.minSize(), len),
+              st.isBounded() ? Math.min(st.maxSize(), len) : len);
+        } else {
+          type = st.withMinSize(0);
+        }
+        return this;
+      case TAIL:
+        type = st.subSeq(2);
+        return this;
+      case OUTERMOST:
+      case INNERMOST:
+        type = st.withMinSize(0);
+        return this;
+      default:
+        return this;
     }
-
-    // all other types will return existing types
-    Occ o = Occ.ZERO_MORE;
-    // at most one returned item
-    if(sig == Function.SUBSEQUENCE && st.size() == 1) o = Occ.ZERO_ONE;
-
-    // head will return at most one item
-    else if(sig == Function.HEAD) o = Occ.ZERO_ONE;
-    type = ExtSeqType.get(SeqType.get(t, o));
-
-    return this;
   }
 
   /**

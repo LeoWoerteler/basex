@@ -214,8 +214,11 @@ public enum AtomType implements Type {
     }
   },
 
+  /** Implementation specific: numeric type. */
+  NUM("numeric", AAT, BASEXURI, true, false, false, Type.ID.NUM),
+
   /** Float type. */
-  FLT("float", AAT, XSURI, true, false, false, Type.ID.FLT) {
+  FLT("float", NUM, XSURI, true, false, false, Type.ID.FLT) {
     @Override
     public Flt cast(final Item it, final QueryContext ctx, final StaticContext sc,
         final InputInfo ii) throws QueryException {
@@ -229,7 +232,7 @@ public enum AtomType implements Type {
   },
 
   /** Double type. */
-  DBL("double", AAT, XSURI, true, false, false, Type.ID.DBL) {
+  DBL("double", NUM, XSURI, true, false, false, Type.ID.DBL) {
     @Override
     public Dbl cast(final Item it, final QueryContext ctx, final StaticContext sc,
         final InputInfo ii) throws QueryException {
@@ -243,7 +246,7 @@ public enum AtomType implements Type {
   },
 
   /** Decimal type. */
-  DEC("decimal", AAT, XSURI, true, false, false, Type.ID.DEC) {
+  DEC("decimal", NUM, XSURI, true, false, false, Type.ID.DEC) {
     @Override
     public Dec cast(final Item it, final QueryContext ctx, final StaticContext sc,
         final InputInfo ii) throws QueryException {
