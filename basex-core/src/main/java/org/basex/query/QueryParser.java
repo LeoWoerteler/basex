@@ -71,12 +71,15 @@ public class QueryParser extends InputParser {
     KEYWORDS30.add(SWITCH);
   }
 
+  /** Imported modules. */
+  final TokenSet imports = new TokenSet();
   /** Modules loaded by the current file. */
   public final TokenSet modules = new TokenSet();
   /** Parsed variables. */
-  public final ArrayList<StaticVar> vars = new ArrayList<>();
+  public final TokenObjMap<StaticVar> vars = new TokenObjMap<>();
   /** Parsed functions. */
-  public final ArrayList<StaticFunc> funcs = new ArrayList<>();
+  public final TokenObjMap<StaticFunc> funcs = new TokenObjMap<>();
+
   /** Namespaces. */
   public final TokenMap namespaces = new TokenMap();
 
@@ -198,7 +201,8 @@ public class QueryParser extends InputParser {
       if(e == null) throw alter == null ? error(EXPREMPTY) : error();
       final VarScope scope = popVarContext();
 
-      final MainModule mm = new MainModule(e, scope, moduleDoc, sc);
+      final MainModule mm = new MainModule(
+          e, scope, null, moduleDoc, funcs, vars, imports, sc, null);
       finish(mm, true);
       return mm;
     } catch(final QueryException ex) {
@@ -244,7 +248,9 @@ public class QueryParser extends InputParser {
       finish(null, check);
 
       ctx.modStack.pop();
-      return new LibraryModule(module, moduleDoc, sc);
+
+      return new LibraryModule(module, moduleDoc, funcs, vars, imports, sc);
+
     } catch(final QueryException ex) {
       mark();
       ex.pos(this);
@@ -774,17 +780,18 @@ public class QueryParser extends InputParser {
   public void module(final byte[] path, final byte[] uri) throws QueryException {
     // get absolute path
     final IO io = sc.io(string(path));
-    final byte[] p = token(io.path());
+    final byte[] pth = token(io.path());
 
     // check if module has already been parsed
-    final byte[] u = ctx.modParsed.get(p);
+    final byte[] u = ctx.modParsed.get(pth);
     if(u != null) {
       if(!eq(uri, u)) throw error(WRONGMODULE, uri,
           ctx.context.user.has(Perm.ADMIN) ? io.path() : io.name());
-      if(!sc.xquery3() && ctx.modStack.contains(p)) throw error(CIRCMODULE);
+      if(!sc.xquery3() && ctx.modStack.contains(pth)) throw error(CIRCMODULE);
       return;
     }
-    ctx.modParsed.put(p, uri);
+    ctx.modParsed.put(pth, uri);
+    imports.put(uri);
 
     // read module
     final String qu;
@@ -794,7 +801,7 @@ public class QueryParser extends InputParser {
       throw error(WHICHMODFILE, ctx.context.user.has(Perm.ADMIN) ? io.path() : io.name());
     }
 
-    ctx.modStack.push(p);
+    ctx.modStack.push(pth);
     final StaticContext sub = new StaticContext(ctx.context);
     final LibraryModule lib = new QueryParser(qu, io.path(), ctx, sub).parseLibrary(false);
     final byte[] muri = lib.name.uri();
@@ -834,13 +841,13 @@ public class QueryParser extends InputParser {
     else if(!wsConsumeWs(ASSIGN)) return;
 
     pushVarContext(null);
-    final Expr e = check(single(), NOVARDECL);
+    final Expr expr = check(single(), NOVARDECL);
     final SeqType type = sc.initType == null ? SeqType.ITEM : sc.initType;
     final VarScope scope = popVarContext();
-    ctx.ctxItem = new MainModule(e, scope, type, currDoc.toString(), sc, info());
+    ctx.ctxItem = MainModule.get(expr, scope, type, currDoc.toString(), sc, info());
 
     if(module != null) throw error(DECITEM);
-    if(!sc.mixUpdates && e.has(Flag.UPD)) throw error(UPCTX, e);
+    if(!sc.mixUpdates && expr.has(Flag.UPD)) throw error(UPCTX, expr);
   }
 
   /**
@@ -864,7 +871,9 @@ public class QueryParser extends InputParser {
     }
 
     final VarScope scope = popVarContext();
-    vars.add(ctx.vars.declare(vn, tp, ann, bind, external, sc, scope, currDoc.toString(), info()));
+    final StaticVar var = ctx.vars.declare(vn, tp, ann, bind, external, sc, scope,
+        currDoc.toString(), info());
+    vars.put(var.id(), var);
   }
 
   /**
@@ -905,7 +914,10 @@ public class QueryParser extends InputParser {
     if(ann.contains(Ann.Q_UPDATING)) ctx.updating();
     final Expr body = wsConsumeWs(EXTERNAL) ? null : enclosed(NOFUNBODY);
     final VarScope scope = popVarContext();
-    funcs.add(ctx.funcs.declare(ann, name, args, tp, body, sc, scope, currDoc.toString(), ii));
+
+    final StaticFunc func = ctx.funcs.declare(ann, name, args, tp, body, sc, scope,
+        currDoc.toString(), ii);
+    funcs.put(func.id(), func);
   }
 
   /**

@@ -17,7 +17,6 @@ import org.basex.query.util.*;
 import org.basex.query.value.*;
 import org.basex.query.value.item.*;
 import org.basex.query.value.node.*;
-import org.basex.query.var.*;
 import org.basex.util.*;
 
 /**
@@ -234,13 +233,8 @@ public final class Unit {
     try {
       query.parse(input, file.path(), null);
 
-      // wrap function with a function call
-      final StaticFuncCall sfc = new StaticFuncCall(
-          func.name, new Expr[0], func.sc, func.info).init(func);
-      final MainModule mm = new MainModule(sfc, new VarScope(func.sc), null, func.sc);
-
       // assign main module and http context and register process
-      query.mainModule(mm);
+      query.mainModule(MainModule.get(func, new Expr[0]));
       query.compile();
 
       final Iter iter = query.iter();

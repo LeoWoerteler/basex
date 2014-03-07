@@ -46,6 +46,8 @@ public final class QueryContext extends Proc {
   /** URL pattern (matching Clark and EQName notation). */
   private static final Pattern BIND = Pattern.compile("^((\"|')(.*?)\\2:|Q?(\\{(.*?)\\}))(.+)$");
 
+  /** Imported modules. */
+  private final TokenObjMap<Module> modules = new TokenObjMap<>();
   /** The evaluation stack. */
   public final QueryStack stack = new QueryStack();
   /** Static variables. */
@@ -291,7 +293,7 @@ public final class QueryContext extends Proc {
       } catch(final QueryException ex) {
         if(ex.err() != NOCTX) throw ex;
         // only {@link ParseExpr} instances may cause this error
-        throw CIRCCTX.get(ctxItem.info);
+        throw NOCTXDECL.get(ctxItem.info);
       }
     } else if(nodes != null) {
       // add full-text container reference
@@ -448,7 +450,7 @@ public final class QueryContext extends Proc {
    */
   public void context(final Object val, final String type, final StaticContext sc)
       throws QueryException {
-    ctxItem = new MainModule(cast(val, type), new VarScope(sc), null, sc);
+    ctxItem = MainModule.get(cast(val, type), new VarScope(sc), null, null, sc, null);
   }
 
   /**
