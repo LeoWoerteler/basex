@@ -93,7 +93,7 @@ public class QueryParser extends InputParser {
   /** XQDoc cache. */
   private final StringBuilder currDoc = new StringBuilder();
   /** Current XQDoc string. */
-  private String moduleDoc = "";
+  private byte[] moduleDoc = Token.EMPTY;
 
   /** Name of current module. */
   private QNm module;
@@ -197,13 +197,15 @@ public class QueryParser extends InputParser {
       prolog2();
 
       pushVarContext(null);
+      final InputInfo ii = info();
       final Expr e = expr();
       if(e == null) throw alter == null ? error(EXPREMPTY) : error();
       final VarScope scope = popVarContext();
 
-      final MainModule mm = new MainModule(
-          e, scope, null, moduleDoc, funcs, vars, imports, sc, null);
-      finish(mm, true);
+      final MainExpr main = new MainExpr(e, scope, moduleDoc, sc, ii);
+      final MainModule mm = new MainModule(main, moduleDoc, funcs, vars, imports, sc);
+      ctx.addModule(mm);
+      finish(main, true);
       return mm;
     } catch(final QueryException ex) {
       mark();
@@ -248,8 +250,9 @@ public class QueryParser extends InputParser {
       finish(null, check);
 
       ctx.modStack.pop();
-
-      return new LibraryModule(module, moduleDoc, funcs, vars, imports, sc);
+      final LibraryModule mod = new LibraryModule(module, moduleDoc, funcs, vars, imports, sc);
+      ctx.addModule(mod);
+      return mod;
 
     } catch(final QueryException ex) {
       mark();
@@ -283,16 +286,16 @@ public class QueryParser extends InputParser {
 
   /**
    * Finishes the parsing step.
-   * @param mm main module; {@code null} for library modules
+   * @param e main expression, {@code null} for library modules
    * @param check check function calls and variable references and update constraints
    * @throws QueryException query exception
    */
-  private void finish(final MainModule mm, final boolean check) throws QueryException {
+  private void finish(final MainExpr e, final boolean check) throws QueryException {
     if(more()) {
       if(alter != null) throw error();
       final String rest = rest();
       pos++;
-      if(mm == null) throw error(MODEXPR, rest);
+      if(e == null) throw error(MODEXPR, rest);
       throw error(QUERYEND, rest);
     }
 
@@ -306,7 +309,7 @@ public class QueryParser extends InputParser {
       sc.decFormats.put(empty, new DecFormatter());
     }
 
-    if(check) ctx.check(mm, sc);
+    if(check) ctx.check(e, sc);
   }
 
   /**
@@ -844,7 +847,7 @@ public class QueryParser extends InputParser {
     final Expr expr = check(single(), NOVARDECL);
     final SeqType type = sc.initType == null ? SeqType.ITEM : sc.initType;
     final VarScope scope = popVarContext();
-    ctx.ctxItem = MainModule.get(expr, scope, type, currDoc.toString(), sc, info());
+    ctx.ctxItem = new ContextItem(expr, type, scope, token(currDoc.toString()), sc, info());
 
     if(module != null) throw error(DECITEM);
     if(!sc.mixUpdates && expr.has(Flag.UPD)) throw error(UPCTX, expr);
@@ -872,7 +875,7 @@ public class QueryParser extends InputParser {
 
     final VarScope scope = popVarContext();
     final StaticVar var = ctx.vars.declare(vn, tp, ann, bind, external, sc, scope,
-        currDoc.toString(), info());
+        token(currDoc.toString()), info());
     vars.put(var.id(), var);
   }
 
@@ -916,7 +919,7 @@ public class QueryParser extends InputParser {
     final VarScope scope = popVarContext();
 
     final StaticFunc func = ctx.funcs.declare(ann, name, args, tp, body, sc, scope,
-        currDoc.toString(), ii);
+        token(currDoc.toString()), ii);
     funcs.put(func.id(), func);
   }
 
@@ -4020,8 +4023,8 @@ public class QueryParser extends InputParser {
       }
       if(curr == ':' && next() == ')') {
         pos += 2;
-        if(moduleDoc.isEmpty()) {
-          moduleDoc = currDoc.toString().trim();
+        if(moduleDoc.length == 0) {
+          moduleDoc = token(currDoc.toString().trim());
           currDoc.setLength(0);
         }
         return;

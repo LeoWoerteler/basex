@@ -144,14 +144,14 @@ public final class QueryInfo {
   }
 
   /**
-   * Serializes all functions and variables reachable from the given main module.
-   * @param mod module to start from
+   * Serializes all functions and variables reachable from the given main expression.
+   * @param expr main expression to start from
    * @return the string representation
    */
-  private static String usedDecls(final MainModule mod) {
+  private String usedDecls(final MainExpr expr) {
     final IdentityHashMap<Scope, Object> map = new IdentityHashMap<>();
     final StringBuilder sb = new StringBuilder();
-    mod.visit(new ASTVisitor() {
+    expr.visit(new ASTVisitor() {
       @Override
       public boolean staticVar(final StaticVar var) {
         if(map.put(var, var) == null) {
@@ -183,6 +183,6 @@ public final class QueryInfo {
         return true;
       }
     });
-    return sb.append(mod).toString();
+    return sb.append(expr.expr).toString();
   }
 }

@@ -25,7 +25,7 @@ import org.basex.util.hash.*;
  * @author BaseX Team 2005-14, BSD License
  * @author Leo Woerteler
  */
-public final class StaticFunc extends StaticDecl implements XQFunction {
+public final class StaticFunc extends NamedDecl implements XQFunction {
   /** Arguments. */
   public final Var[] args;
   /** Updating flag. */
@@ -49,7 +49,7 @@ public final class StaticFunc extends StaticDecl implements XQFunction {
    * @param ii input info
    */
   public StaticFunc(final Ann a, final QNm n, final Var[] v, final SeqType r, final Expr e,
-      final StaticContext stc, final VarScope scp, final String xqdoc, final InputInfo ii) {
+      final StaticContext stc, final VarScope scp, final byte[] xqdoc, final InputInfo ii) {
 
     super(stc, a, n, r, scp, xqdoc, ii);
     args = v;

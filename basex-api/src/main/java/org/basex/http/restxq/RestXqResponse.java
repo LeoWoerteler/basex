@@ -55,7 +55,7 @@ final class RestXqResponse {
     function.bind(http, args, error);
 
     // assign function call and http context and register process
-    query.mainModule(MainModule.get(uf, args));
+    query.mainExpr(MainExpr.get(uf, args));
     query.http(http);
     query.context.register(query);
 

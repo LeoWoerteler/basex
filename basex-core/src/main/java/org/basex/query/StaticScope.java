@@ -1,17 +1,11 @@
 package org.basex.query;
 
-import static org.basex.query.QueryText.*;
-
-import java.io.*;
-
+import org.basex.core.*;
 import org.basex.data.*;
-import org.basex.io.*;
-import org.basex.io.in.*;
+import org.basex.query.MainExpr.*;
 import org.basex.query.expr.*;
 import org.basex.query.var.*;
 import org.basex.util.*;
-import org.basex.util.hash.*;
-import org.basex.util.list.*;
 
 /**
  * Superclass for static functions, variables and the main expression.
@@ -38,15 +32,15 @@ public abstract class StaticScope extends ExprInfo implements Scope {
    * Constructor.
    * @param scp variable scope
    * @param ii input info
-   * @param xqdoc documentation (may be {@code null} or empty)
+   * @param xqdoc documentation
    * @param sctx static context
    */
-  StaticScope(final VarScope scp, final String xqdoc, final StaticContext sctx,
-              final InputInfo ii) {
+  StaticScope(final VarScope scp, final byte[] xqdoc, final StaticContext sctx,
+      final InputInfo ii) {
     sc = sctx;
     scope = scp;
     info = ii;
-    doc = xqdoc != null && !xqdoc.isEmpty() ? Token.token(xqdoc) : null;
+    doc = xqdoc;
   }
 
   @Override
@@ -55,53 +49,21 @@ public abstract class StaticScope extends ExprInfo implements Scope {
   }
 
   /**
-   * Returns a map with all documentation tags found for this scope, or {@code null} if
-   * no documentation exists. The main description is flagged with the "description" key.
-   * The supported tags are defined in {@link QueryText#DOC_TAGS} (other tags will be
-   * included in the map, too).
-   * @return documentation
+   * Returns this scope's documentation if present, {@code null} otherwise.
+   * @return documentation string or {@code null}
    */
-  public TokenObjMap<TokenList> doc() {
-    if(doc == null) return null;
-
-    final TokenObjMap<TokenList> map = new TokenObjMap<>();
-    byte[] key = null;
-    final TokenBuilder val = new TokenBuilder();
-    final TokenBuilder line = new TokenBuilder();
-    try {
-      final NewlineInput nli = new NewlineInput(new IOContent(doc));
-      while(nli.readLine(line)) {
-        String l = line.toString().replaceAll("^\\s*: ?", "");
-        if(l.startsWith("@")) {
-          add(key, val, map);
-          key = Token.token(l.replaceAll("^@(\\w*).*", "$1"));
-          l = l.replaceAll("^@\\w+ *", "");
-          val.reset();
-        }
-        val.add(l).add('\n');
-      }
-    } catch(final IOException ex) {
-      throw Util.notExpected(ex);
-    }
-    add(key, val, map);
-    return map;
+  public final byte[] doc() {
+    return doc;
   }
 
   /**
-   * Adds a key and a value to the specified map.
-   * @param key key
-   * @param val value
-   * @param map map
+   * Adds the names of the databases that may be touched by the module.
+   * @param lr lock result
+   * @param ctx query context
+   * @return result of check
+   * @see Proc#databases(LockResult)
    */
-  private static void add(final byte[] key, final TokenBuilder val,
-      final TokenObjMap<TokenList> map) {
-
-    final byte[] k = key == null ? DOC_TAGS[0] : key;
-    TokenList tl = map.get(k);
-    if(tl == null) {
-      tl = new TokenList();
-      map.put(k, tl);
-    }
-    tl.add(val.trim().finish());
+  public final boolean databases(final LockResult lr, final QueryContext ctx) {
+    return expr.accept(new LockVisitor(lr, ctx));
   }
 }

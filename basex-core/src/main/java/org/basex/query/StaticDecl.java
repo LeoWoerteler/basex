@@ -1,7 +1,5 @@
 package org.basex.query;
 
-import org.basex.query.util.*;
-import org.basex.query.value.item.*;
 import org.basex.query.value.type.*;
 import org.basex.query.var.*;
 import org.basex.util.*;
@@ -13,10 +11,6 @@ import org.basex.util.*;
  * @author Leo Woerteler
  */
 public abstract class StaticDecl extends StaticScope {
-  /** Annotations. */
-  public final Ann ann;
-  /** This declaration's name. */
-  public final QNm name;
   /** Declared type, {@code null} if not specified. */
   protected final SeqType declType;
 
@@ -26,27 +20,16 @@ public abstract class StaticDecl extends StaticScope {
   /**
    * Constructor.
    * @param sctx static context
-   * @param a annotations
-   * @param nm name
    * @param t declared return type
    * @param scp variable scope
    * @param xqdoc documentation
    * @param ii input info
    */
-  protected StaticDecl(final StaticContext sctx, final Ann a, final QNm nm, final SeqType t,
-      final VarScope scp, final String xqdoc, final InputInfo ii) {
-
+  protected StaticDecl(final StaticContext sctx, final SeqType t, final VarScope scp,
+      final byte[] xqdoc, final InputInfo ii) {
     super(scp, xqdoc, sctx, ii);
-    ann = a == null ? new Ann() : a;
-    name = nm;
     declType = t;
   }
-
-  /**
-   * Returns a unique identifier for this declaration.
-   * @return a byte sequence that uniquely identifies this declaration
-   */
-  public abstract byte[] id();
 
   /**
    * Returns the type of this expression. If no type has been declare in the expression,

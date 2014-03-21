@@ -8,6 +8,7 @@ import java.io.*;
 
 import org.basex.core.*;
 import org.basex.io.*;
+import org.basex.io.in.*;
 import org.basex.query.*;
 import org.basex.query.func.*;
 import org.basex.query.util.*;
@@ -30,7 +31,7 @@ public abstract class Inspect {
   /** Input info. */
   final InputInfo info;
 
-  /** Parsed main module. */
+  /** Parsed module. */
   Module module;
 
   /**
@@ -160,5 +161,57 @@ public abstract class Inspect {
       }
     }
     return null;
+  }
+
+  /**
+   * Returns a map with all documentation tags found in the given documentation string,
+   * or {@code null} if no documentation exists. The main description is flagged with the
+   * "description" key. The supported tags are defined in {@link QueryText#DOC_TAGS}
+   * (other tags will be included in the map, too).
+   * @param doc documentation string
+   * @return documentation
+   */
+  public static TokenObjMap<TokenList> doc(final byte[] doc) {
+    if(doc == null) return null;
+
+    final TokenObjMap<TokenList> map = new TokenObjMap<>();
+    byte[] key = null;
+    final TokenBuilder val = new TokenBuilder();
+    final TokenBuilder line = new TokenBuilder();
+    try {
+      final NewlineInput nli = new NewlineInput(new IOContent(doc));
+      while(nli.readLine(line)) {
+        String l = line.toString().replaceAll("^\\s*: ?", "");
+        if(l.startsWith("@")) {
+          add(key, val, map);
+          key = Token.token(l.replaceAll("^@(\\w*).*", "$1"));
+          l = l.replaceAll("^@\\w+ *", "");
+          val.reset();
+        }
+        val.add(l).add('\n');
+      }
+    } catch(final IOException ex) {
+      throw Util.notExpected(ex);
+    }
+    add(key, val, map);
+    return map;
+  }
+
+  /**
+   * Adds a key and a value to the specified map.
+   * @param key key
+   * @param val value
+   * @param map map
+   */
+  private static void add(final byte[] key, final TokenBuilder val,
+      final TokenObjMap<TokenList> map) {
+
+    final byte[] k = key == null ? DOC_TAGS[0] : key;
+    TokenList tl = map.get(k);
+    if(tl == null) {
+      tl = new TokenList();
+      map.put(k, tl);
+    }
+    tl.add(val.trim().finish());
   }
 }

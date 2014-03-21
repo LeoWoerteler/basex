@@ -59,7 +59,7 @@ public final class PlainDoc extends Inspect {
       mod.add("uri", name.uri());
     }
 
-    final TokenObjMap<TokenList> doc = module.doc();
+    final TokenObjMap<TokenList> doc = doc(module.doc());
     if(doc != null) comment(doc, mod);
 
     for(final StaticVar sv : module.vars().values()) variable(sv, mod);
@@ -105,7 +105,7 @@ public final class PlainDoc extends Inspect {
       if(fname.uri().length != 0) function.add("uri", fname.uri());
     }
 
-    final TokenObjMap<TokenList> doc = sf != null ? sf.doc() : null;
+    final TokenObjMap<TokenList> doc = sf != null ? doc(sf.doc()) : null;
     final int al = ftype.args.length;
     QNm[] names = null;
     if(sf != null) {
@@ -166,7 +166,7 @@ public final class PlainDoc extends Inspect {
    * @param parent parent element
    */
   private void comment(final StaticScope scope, final FElem parent) {
-    final TokenObjMap<TokenList> tags = scope.doc();
+    final TokenObjMap<TokenList> tags = doc(scope.doc());
     if(tags != null) comment(tags, parent);
   }
 

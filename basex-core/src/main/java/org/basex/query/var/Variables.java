@@ -39,7 +39,7 @@ public final class Variables extends ExprInfo implements Iterable<StaticVar> {
    * @throws QueryException query exception
    */
   public StaticVar declare(final QNm nm, final SeqType t, final Ann a, final Expr e,
-      final boolean ext, final StaticContext sctx, final VarScope scp, final String xqdoc,
+      final boolean ext, final StaticContext sctx, final VarScope scp, final byte[] xqdoc,
       final InputInfo ii) throws QueryException {
 
     final StaticVar var = new StaticVar(sctx, scp, a, nm, t, e, ext, xqdoc, ii);

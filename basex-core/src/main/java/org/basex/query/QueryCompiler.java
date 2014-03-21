@@ -52,11 +52,11 @@ final class QueryCompiler {
   }
 
   /**
-   * Gathers all declarations (functions and static variables) used by the given main module.
-   * @param main the main module to start from
-   * @return list of all declarations that the main module uses
+   * Gathers all declarations (functions and static variables) used by the given main expression.
+   * @param main the main expression to start from
+   * @return list of all declarations that the main expression uses
    */
-  public static List<StaticDecl> usedDecls(final MainModule main) {
+  public static List<StaticDecl> usedDecls(final MainExpr main) {
     final List<StaticDecl> scopes = new ArrayList<>();
     final IdentityHashMap<Scope, Object> map = new IdentityHashMap<>();
     main.visit(new ASTVisitor() {
@@ -100,7 +100,7 @@ final class QueryCompiler {
    * @param root root expression
    * @throws QueryException compilation errors
    */
-  public static void compile(final QueryContext ctx, final MainModule root)
+  public static void compile(final QueryContext ctx, final MainExpr root)
       throws QueryException {
     if(!root.compiled()) new QueryCompiler(ctx, root).compile();
   }

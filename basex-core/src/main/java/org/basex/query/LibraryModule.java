@@ -1,9 +1,7 @@
 package org.basex.query;
 
 import org.basex.query.func.*;
-import org.basex.query.util.*;
 import org.basex.query.value.item.*;
-import org.basex.query.value.node.*;
 import org.basex.query.var.*;
 import org.basex.util.hash.*;
 
@@ -26,35 +24,14 @@ public final class LibraryModule extends Module {
    * @param modules imported modules
    * @param sctx static context
    */
-  public LibraryModule(final QNm name, final String xqdoc, final TokenObjMap<StaticFunc> funcs,
+  public LibraryModule(final QNm name, final byte[] xqdoc, final TokenObjMap<StaticFunc> funcs,
       final TokenObjMap<StaticVar> vars, final TokenSet modules, final StaticContext sctx) {
-    super(null, xqdoc, funcs, vars, modules, sctx, null);
+    super(xqdoc, funcs, vars, modules, sctx);
     this.name = name;
   }
 
-  /**
-   * Returns the module namespace URI.
-   * @return URI
-   */
-  public byte[] uri() {
+  @Override
+  public byte[] nsURI() {
     return name.uri();
-  }
-
-  @Override
-  public boolean visit(final ASTVisitor visitor) {
-    return true;
-  }
-
-  @Override
-  public void compile(final QueryContext ctx) {
-  }
-
-  @Override
-  public String toString() {
-    return "";
-  }
-
-  @Override
-  public void plan(final FElem e) {
   }
 }

@@ -56,7 +56,7 @@ public final class XQDoc extends Inspect {
     } else {
       elem("uri", mod).add(io.name());
     }
-    comment(module, mod);
+    comment(module.doc(), mod);
 
     // namespaces
     final FElem namespaces = elem("namespaces", xqdoc);
@@ -74,7 +74,7 @@ public final class XQDoc extends Inspect {
       final FElem variable = elem("variable", variables);
       elem("name", variable).add(sv.name.string());
       if(sv.name.hasPrefix()) nsCache.put(sv.name.prefix(), sv.name.uri());
-      comment(sv, variable);
+      comment(sv.doc(), variable);
       annotations(sv.ann, variable);
       type(sv.type(), variable);
     }
@@ -86,7 +86,7 @@ public final class XQDoc extends Inspect {
       final QNm name = sf.funcName();
       final FuncType t = sf.funcType();
       final FElem function = elem("function", functions).add("arity", token(al));
-      comment(sf, function);
+      comment(sf.doc(), function);
       elem("name", function).add(name.string());
       if(name.hasPrefix()) nsCache.put(name.prefix(), name.uri());
       annotations(sf.ann, function);
@@ -138,11 +138,11 @@ public final class XQDoc extends Inspect {
 
   /**
    * Creates a comment element.
-   * @param scope scope
+   * @param doc documentation string
    * @param parent parent element
    */
-  private void comment(final StaticScope scope, final FElem parent) {
-    final TokenObjMap<TokenList> map = scope.doc();
+  private void comment(final byte[] doc, final FElem parent) {
+    final TokenObjMap<TokenList> map = doc(doc);
     if(map != null) comment(map, elem("comment", parent));
   }
 

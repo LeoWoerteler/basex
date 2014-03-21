@@ -5,6 +5,7 @@ import static org.basex.query.util.Err.*;
 import static org.basex.util.Token.*;
 
 import java.util.*;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.regex.*;
 
@@ -47,7 +48,7 @@ public final class QueryContext extends Proc {
   private static final Pattern BIND = Pattern.compile("^((\"|')(.*?)\\2:|Q?(\\{(.*?)\\}))(.+)$");
 
   /** Imported modules. */
-  private final TokenObjMap<Module> modules = new TokenObjMap<>();
+  private final TokenObjMap<List<Module>> modules = new TokenObjMap<>();
   /** The evaluation stack. */
   public final QueryStack stack = new QueryStack();
   /** Static variables. */
@@ -137,10 +138,9 @@ public final class QueryContext extends Proc {
   /** Serializer options. */
   SerializerOptions serialOpts;
   /** Initial context value. */
-  public MainModule ctxItem;
-
+  public ContextItem ctxItem;
   /** Root expression of the query. */
-  public MainModule root;
+  public MainExpr root;
 
   /** Indicates if the query context has been closed. */
   private boolean closed;
@@ -180,10 +180,10 @@ public final class QueryContext extends Proc {
    * @param qu input query
    * @param path file path (may be {@code null})
    * @param sc static context
-   * @return main module
+   * @return stati
    * @throws QueryException query exception
    */
-  public StaticScope parse(final String qu, final String path, final StaticContext sc)
+  public StaticContext parse(final String qu, final String path, final StaticContext sc)
       throws QueryException {
     return parse(qu, QueryProcessor.isLibrary(qu), path, sc);
   }
@@ -197,9 +197,9 @@ public final class QueryContext extends Proc {
    * @return main module
    * @throws QueryException query exception
    */
-  public StaticScope parse(final String qu, final boolean library, final String path,
+  public StaticContext parse(final String qu, final boolean library, final String path,
       final StaticContext sc) throws QueryException {
-    return library ? parseLibrary(qu, path, sc) : parseMain(qu, path, sc);
+    return library ? parseLibrary(qu, path, sc).sc() : parseMain(qu, path, sc).sc;
   }
 
   /**
@@ -210,11 +210,11 @@ public final class QueryContext extends Proc {
    * @return main module
    * @throws QueryException query exception
    */
-  public MainModule parseMain(final String qu, final String path, final StaticContext sc)
+  public MainExpr parseMain(final String qu, final String path, final StaticContext sc)
       throws QueryException {
 
     info.query = qu;
-    root = new QueryParser(qu, path, this, sc).parseMain();
+    root = new QueryParser(qu, path, this, sc).parseMain().expr;
     updating = updating && root.expr.has(Flag.UPD);
     return root;
   }
@@ -238,7 +238,7 @@ public final class QueryContext extends Proc {
    * Sets the main module (root expression).
    * @param rt main module
    */
-  public void mainModule(final MainModule rt) {
+  public void mainExpr(final MainExpr rt) {
     root = rt;
     updating = rt.expr.has(Flag.UPD);
   }
@@ -249,7 +249,7 @@ public final class QueryContext extends Proc {
    * @param sc static context
    * @throws QueryException query exception
    */
-  void check(final MainModule main, final StaticContext sc) throws QueryException {
+  void check(final MainExpr main, final StaticContext sc) throws QueryException {
     // check function calls and variable references
     funcs.check(this);
     vars.check();
@@ -289,7 +289,7 @@ public final class QueryContext extends Proc {
       try {
 
         ctxItem.compile(this);
-        value = ctxItem.cache(this).value();
+        value = ctxItem.value(this);
       } catch(final QueryException ex) {
         if(ex.err() != NOCTX) throw ex;
         // only {@link ParseExpr} instances may cause this error
@@ -450,7 +450,7 @@ public final class QueryContext extends Proc {
    */
   public void context(final Object val, final String type, final StaticContext sc)
       throws QueryException {
-    ctxItem = MainModule.get(cast(val, type), new VarScope(sc), null, null, sc, null);
+    ctxItem = new ContextItem(cast(val, type), null, new VarScope(sc), Token.EMPTY, sc, null);
   }
 
   /**
@@ -766,5 +766,16 @@ public final class QueryContext extends Proc {
       zone = new DTDur(toInt(zon.substring(0, 3)), toInt(zon.substring(3)));
     }
     return this;
+  }
+
+  /**
+   * Adds a parsed module to this context.
+   * @param mod module to add
+   */
+  void addModule(final Module mod) {
+    final byte[] key = mod.nsURI();
+    final List<Module> lst = modules.get(key);
+    if(lst != null) lst.add(mod);
+    else modules.put(key, new ArrayList<>(Collections.singleton(mod)));
   }
 }

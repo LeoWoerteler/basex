@@ -53,7 +53,7 @@ public final class StaticFuncs extends ExprInfo {
    * @throws QueryException query exception
    */
   public StaticFunc declare(final Ann ann, final QNm nm, final Var[] args, final SeqType ret,
-      final Expr body, final StaticContext sc, final VarScope scp, final String xqdoc,
+      final Expr body, final StaticContext sc, final VarScope scp, final byte[] xqdoc,
       final InputInfo ii) throws QueryException {
 
     final byte[] uri = nm.uri();

@@ -20,7 +20,7 @@ import org.basex.util.*;
  * @author BaseX Team 2005-14, BSD License
  * @author Leo Woerteler
  */
-public final class StaticVar extends StaticDecl {
+public final class StaticVar extends NamedDecl {
   /** Annotation for lazy evaluation. */
   private static final QNm LAZY = new QNm(QueryText.LAZY, BASEXURI);
 
@@ -44,7 +44,7 @@ public final class StaticVar extends StaticDecl {
    * @param ii input info
    */
   StaticVar(final StaticContext sctx, final VarScope scp, final Ann a, final QNm n,
-      final SeqType t, final Expr e, final boolean ext, final String xqdoc, final InputInfo ii) {
+      final SeqType t, final Expr e, final boolean ext, final byte[] xqdoc, final InputInfo ii) {
     super(sctx, a, n, t, scp, xqdoc, ii);
     expr = e;
     external = ext;

@@ -51,7 +51,7 @@ final class RestXqWadl {
       for(final RestXqFunction func : mod.functions()) {
         if(func.path == null) continue;
 
-        final TokenObjMap<TokenList> xqdoc = func.function.doc();
+        final TokenObjMap<TokenList> xqdoc = Inspect.doc(func.function.doc());
         final String path = func.path.toString();
         final String methods = func.methods.toString().replaceAll("[^A-Z ]", "");
 
