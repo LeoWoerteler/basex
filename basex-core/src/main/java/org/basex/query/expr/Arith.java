@@ -19,7 +19,7 @@ import org.basex.util.hash.*;
  */
 public final class Arith extends Arr {
   /** Calculation operator. */
-  private final Calc calc;
+  private Calc calc;
 
   /**
    * Constructor.
@@ -42,17 +42,21 @@ public final class Arith extends Arr {
 
   @Override
   public Expr optimize(final QueryContext ctx, final VarScope scp) throws QueryException {
+    if(oneIsEmpty()) return optPre(null, ctx);
+    if(allAreValues()) return optPre(item(ctx, info), ctx);
+
     final SeqType s0 = expr[0].type();
     final SeqType s1 = expr[1].type();
-    final Type t0 = s0.type;
-    final Type t1 = s1.type;
+    final Type t0 = s0.type, t1 = s1.type;
+    final boolean noneEmpty = s0.occ.min > 0 && s1.occ.min > 0;
     if(t0.isNumberOrUntyped() && t1.isNumberOrUntyped()) {
-      final Occ occ = s0.one() && s1.one() ? Occ.ONE : Occ.ZERO_ONE;
-      type = SeqType.get(Calc.type(t0, t1), occ);
-    } else if(s0.one() && s1.one()) {
-      type = SeqType.ITEM;
+      final Type outType = Calc.type(t0, t1);
+      calc = calc.specialize(outType);
+      type = SeqType.get(outType, noneEmpty ? Occ.ONE : Occ.ZERO_ONE);
+    } else if(noneEmpty) {
+      type = SeqType.AAT;
     }
-    return optPre(oneIsEmpty() ? null : allAreValues() ? item(ctx, info) : this, ctx);
+    return this;
   }
 
   @Override

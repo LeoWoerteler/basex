@@ -185,6 +185,7 @@ public abstract class ParseExpr extends Expr {
     // updating state: 0 = initial state, 1 = updating, -1 = non-updating
     int s = 0;
     for(final Expr e : expr) {
+      if(e == null) continue;
       e.checkUp();
       if(e.isVacuous()) continue;
       final boolean u = e.has(Flag.UPD);
