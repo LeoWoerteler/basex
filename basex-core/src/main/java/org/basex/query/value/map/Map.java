@@ -7,6 +7,7 @@ import java.util.*;
 
 import org.basex.query.*;
 import org.basex.query.expr.*;
+import org.basex.query.iter.*;
 import org.basex.query.util.collation.*;
 import org.basex.query.util.list.*;
 import org.basex.query.value.*;
@@ -225,6 +226,19 @@ public final class Map extends FItem {
     final ValueBuilder vb = new ValueBuilder();
     root.forEach(vb, func, qc, ii);
     return vb.value();
+  }
+
+  /**
+   * Applies a function on all entries and evaluates the result lazily.
+   * @param func function to apply on keys and values
+   * @param qc query context
+   * @param ii input info
+   * @return result iterator
+   * @throws QueryException query exception
+   */
+  public Iter forEachIter(final FItem func, final QueryContext qc, final InputInfo ii)
+      throws QueryException {
+    return root.forEach(func, qc, ii);
   }
 
   @Override

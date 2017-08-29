@@ -4,9 +4,11 @@ import static org.basex.query.QueryError.*;
 import static org.basex.query.QueryText.*;
 
 import org.basex.query.*;
+import org.basex.query.iter.*;
 import org.basex.query.util.collation.*;
 import org.basex.query.value.*;
 import org.basex.query.value.item.*;
+import org.basex.query.value.seq.*;
 import org.basex.query.value.type.*;
 import org.basex.util.*;
 
@@ -267,6 +269,28 @@ final class TrieList extends TrieNode {
     for(int i = 0; i < size; i++) {
       vb.add(func.invokeValue(qc, ii, keys[i], values[i]));
     }
+  }
+
+  @Override
+  Iter forEach(final FItem func, final QueryContext qc, final InputInfo ii) throws QueryException {
+    return new Iter() {
+      /** Current position inside the map node. */
+      private int pos;
+      /** Iterator over the result of the current binding. */
+      private Iter inner = Empty.ITER;
+
+      @Override
+      public Item next() throws QueryException {
+        Item next = null;
+        while ((next = inner.next()) == null) {
+          if (++pos >= size) {
+            return null;
+          }
+          inner = func.invokeValue(qc, ii, keys[pos], values[pos]).iter();
+        }
+        return next;
+      }
+    };
   }
 
   @Override

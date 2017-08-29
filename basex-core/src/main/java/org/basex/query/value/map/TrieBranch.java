@@ -1,6 +1,7 @@
 package org.basex.query.value.map;
 
 import org.basex.query.*;
+import org.basex.query.iter.*;
 import org.basex.query.util.collation.*;
 import org.basex.query.value.*;
 import org.basex.query.value.item.*;
@@ -15,7 +16,7 @@ import org.basex.util.*;
  */
 final class TrieBranch extends TrieNode {
   /** Child array. */
-  private final TrieNode[] kids;
+  final TrieNode[] kids;
   /** Bit array with a bit set for every used slot. */
   final int used;
 
@@ -213,6 +214,11 @@ final class TrieBranch extends TrieNode {
     for(final TrieNode nd : kids) {
       if(nd != null) nd.forEach(vb, func, qc, ii);
     }
+  }
+
+  @Override
+  Iter forEach(final FItem func, final QueryContext qc, final InputInfo ii) throws QueryException {
+    return new ForEachIter(qc, ii, this, func);
   }
 
   @Override

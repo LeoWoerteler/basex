@@ -4,6 +4,7 @@ import static org.basex.query.QueryError.*;
 import static org.basex.query.QueryText.*;
 
 import org.basex.query.*;
+import org.basex.query.iter.*;
 import org.basex.query.util.collation.*;
 import org.basex.query.value.*;
 import org.basex.query.value.item.*;
@@ -205,6 +206,11 @@ final class TrieLeaf extends TrieNode {
   void forEach(final ValueBuilder vb, final FItem func, final QueryContext qc, final InputInfo ii)
       throws QueryException {
     vb.add(func.invokeValue(qc, ii, key, value));
+  }
+
+  @Override
+  Iter forEach(final FItem func, final QueryContext qc, final InputInfo ii) throws QueryException {
+    return func.invokeValue(qc, ii, key, value).iter();
   }
 
   @Override

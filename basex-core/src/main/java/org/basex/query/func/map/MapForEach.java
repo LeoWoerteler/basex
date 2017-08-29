@@ -14,7 +14,7 @@ import org.basex.query.value.*;
 public final class MapForEach extends StandardFunc {
   @Override
   public Iter iter(final QueryContext qc) throws QueryException {
-    return value(qc).iter();
+    return toMap(exprs[0], qc).forEachIter(checkArity(exprs[1], 2, qc), qc, info);
   }
 
   @Override

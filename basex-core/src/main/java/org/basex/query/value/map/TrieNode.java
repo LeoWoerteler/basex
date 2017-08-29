@@ -4,9 +4,11 @@ import static org.basex.query.QueryText.*;
 
 import org.basex.query.*;
 import org.basex.query.func.fn.*;
+import org.basex.query.iter.*;
 import org.basex.query.util.collation.*;
 import org.basex.query.value.*;
 import org.basex.query.value.item.*;
+import org.basex.query.value.seq.*;
 import org.basex.query.value.type.*;
 import org.basex.util.*;
 
@@ -66,6 +68,11 @@ abstract class TrieNode {
     StringBuilder append(final StringBuilder sb, final String ind) { return sb.append("{ }"); }
     @Override
     StringBuilder append(final StringBuilder sb) { return sb; }
+    @Override
+    Iter forEach(final FItem func, final QueryContext qc, final InputInfo ii)
+        throws QueryException {
+      return Empty.ITER;
+    }
   };
 
   /** Size of this node. */
@@ -209,6 +216,16 @@ abstract class TrieNode {
    */
   abstract void forEach(ValueBuilder vb, FItem func, QueryContext qc, InputInfo ii)
       throws QueryException;
+
+  /**
+   * Applies a function on all entries and evaluates the result lazily.
+   * @param func function to apply on keys and values
+   * @param qc query context
+   * @param ii input info
+   * @return iterator over the results
+   * @throws QueryException query exception
+   */
+  abstract Iter forEach(FItem func, QueryContext qc, InputInfo ii) throws QueryException;
 
   /**
    * Calculates the hash key for the given level.
